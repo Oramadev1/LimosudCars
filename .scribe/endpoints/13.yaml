@@ -1,0 +1,421 @@
+name: Alerts
+description: |-
+
+  Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/alerts
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List alerts.'
+      description: 'Requires permission: `alerts.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/alerts/pending
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List pending alerts.'
+      description: 'Requires permission: `alerts.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/alerts
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create an alert.'
+      description: 'Requires permission: `alerts.create`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      vehicle_id:
+        custom: []
+        name: vehicle_id
+        description: 'optional Vehicle ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      alert_type_slug:
+        custom: []
+        name: alert_type_slug
+        description: 'Alert type slug.'
+        required: true
+        example: maintenance_due
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      alert_status_slug:
+        custom: []
+        name: alert_status_slug
+        description: 'optional Alert status slug. Defaults to pending.'
+        required: false
+        example: pending
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      title:
+        custom: []
+        name: title
+        description: 'Alert title.'
+        required: true
+        example: 'Oil change due'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      message:
+        custom: []
+        name: message
+        description: 'optional Alert message.'
+        required: false
+        example: 'Schedule oil change.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      due_date:
+        custom: []
+        name: due_date
+        description: 'optional Alert due date.'
+        required: false
+        example: '2026-07-01'
+        type: date
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      vehicle_id: 1
+      alert_type_slug: maintenance_due
+      alert_status_slug: pending
+      title: 'Oil change due'
+      message: 'Schedule oil change.'
+      due_date: '2026-07-01'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/alerts/generate
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Generate maintenance and document expiry alerts.'
+      description: 'Requires permission: `alerts.create`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/admin/alerts/{alert_id}'
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Display an alert.'
+      description: 'Requires permission: `alerts.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      alert_id:
+        custom: []
+        name: alert_id
+        description: 'The ID of the alert.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      alert_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/alerts/{alert_id}/seen'
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Mark a pending alert as seen.'
+      description: 'Requires permission: `alerts.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      alert_id:
+        custom: []
+        name: alert_id
+        description: 'The ID of the alert.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      alert_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/alerts/{alert_id}/done'
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Mark a pending or seen alert as done.'
+      description: 'Requires permission: `alerts.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      alert_id:
+        custom: []
+        name: alert_id
+        description: 'The ID of the alert.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      alert_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/alerts/{alert_id}/ignore'
+    metadata:
+      custom: []
+      groupName: Alerts
+      groupDescription: |-
+
+        Admin alert endpoints. Requires the matching `alerts.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Ignore a pending or seen alert.'
+      description: 'Requires permission: `alerts.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      alert_id:
+        custom: []
+        name: alert_id
+        description: 'The ID of the alert.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      alert_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null

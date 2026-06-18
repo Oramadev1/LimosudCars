@@ -1,0 +1,648 @@
+name: Payments
+description: |-
+
+  Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/admin/reservations/{reservation_id}/payment-summary'
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Return calculated payment totals for a reservation.'
+      description: 'Requires permission: `payments.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/payments
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List payments for the admin dashboard.'
+      description: 'Requires permission: `payments.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/payments
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Store a new payment and recalculate reservation payment status.'
+      description: 'Requires permission: `payments.manage`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'Reservation ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_method_slug:
+        custom: []
+        name: payment_method_slug
+        description: 'Payment method slug.'
+        required: true
+        example: cash
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_type_slug:
+        custom: []
+        name: payment_type_slug
+        description: 'Payment type slug.'
+        required: true
+        example: rental_payment
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_status_slug:
+        custom: []
+        name: payment_status_slug
+        description: 'Payment status slug.'
+        required: true
+        example: paid
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'Payment amount.'
+        required: true
+        example: 300.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_date:
+        custom: []
+        name: payment_date
+        description: 'Payment date.'
+        required: true
+        example: '2026-06-10'
+        type: date
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      paid_by_customer_name:
+        custom: []
+        name: paid_by_customer_name
+        description: 'optional Name of the paying customer.'
+        required: false
+        example: 'Ahmed Dakhla'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      reference:
+        custom: []
+        name: reference
+        description: 'optional External reference.'
+        required: false
+        example: PAY-001
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: 'optional Internal payment notes.'
+        required: false
+        example: 'Advance payment.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      reservation_id: 1
+      payment_method_slug: cash
+      payment_type_slug: rental_payment
+      payment_status_slug: paid
+      amount: 300.0
+      payment_date: '2026-06-10'
+      paid_by_customer_name: 'Ahmed Dakhla'
+      reference: PAY-001
+      notes: 'Advance payment.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/admin/payments/{payment_id}'
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Display a payment.'
+      description: 'Requires permission: `payments.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      payment_id:
+        custom: []
+        name: payment_id
+        description: 'The ID of the payment.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      payment_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/admin/payments/{payment_id}'
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a payment and recalculate reservation payment status.'
+      description: 'Requires permission: `payments.manage`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      payment_id:
+        custom: []
+        name: payment_id
+        description: 'The ID of the payment.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      payment_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_method_slug:
+        custom: []
+        name: payment_method_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_type_slug:
+        custom: []
+        name: payment_type_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_status_slug:
+        custom: []
+        name: payment_status_slug
+        description: 'optional Payment status slug.'
+        required: false
+        example: paid
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'optional Payment amount.'
+        required: false
+        example: 1000.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_date:
+        custom: []
+        name: payment_date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-06-10T20:50:28'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      paid_by_customer_name:
+        custom: []
+        name: paid_by_customer_name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: qeopfuudtdsufvyvddqam
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reference:
+        custom: []
+        name: reference
+        description: 'optional External reference.'
+        required: false
+        example: FULL-001
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      reservation_id: 17
+      payment_method_slug: consequatur
+      payment_type_slug: consequatur
+      payment_status_slug: paid
+      amount: 1000.0
+      payment_date: '2026-06-10T20:50:28'
+      paid_by_customer_name: qeopfuudtdsufvyvddqam
+      reference: FULL-001
+      notes: consequatur
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/payments/{payment_id}'
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a payment and recalculate reservation payment status.'
+      description: 'Requires permission: `payments.manage`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      payment_id:
+        custom: []
+        name: payment_id
+        description: 'The ID of the payment.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      payment_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_method_slug:
+        custom: []
+        name: payment_method_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_type_slug:
+        custom: []
+        name: payment_type_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      payment_status_slug:
+        custom: []
+        name: payment_status_slug
+        description: 'optional Payment status slug.'
+        required: false
+        example: paid
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      amount:
+        custom: []
+        name: amount
+        description: 'optional Payment amount.'
+        required: false
+        example: 1000.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      payment_date:
+        custom: []
+        name: payment_date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-06-10T20:50:28'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      paid_by_customer_name:
+        custom: []
+        name: paid_by_customer_name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: qeopfuudtdsufvyvddqam
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      reference:
+        custom: []
+        name: reference
+        description: 'optional External reference.'
+        required: false
+        example: FULL-001
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      notes:
+        custom: []
+        name: notes
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      reservation_id: 17
+      payment_method_slug: consequatur
+      payment_type_slug: consequatur
+      payment_status_slug: paid
+      amount: 1000.0
+      payment_date: '2026-06-10T20:50:28'
+      paid_by_customer_name: qeopfuudtdsufvyvddqam
+      reference: FULL-001
+      notes: consequatur
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/payments/{payment_id}/cancel'
+    metadata:
+      custom: []
+      groupName: Payments
+      groupDescription: |-
+
+        Admin payment endpoints. Requires `payments.view` or `payments.manage` as listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Safely cancel a payment without deleting the financial record.'
+      description: 'Requires permission: `payments.manage`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      payment_id:
+        custom: []
+        name: payment_id
+        description: 'The ID of the payment.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      payment_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null

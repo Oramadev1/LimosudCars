@@ -1,0 +1,136 @@
+name: 'Admin Auth'
+description: |-
+
+  Endpoints for issuing and revoking Laravel Sanctum admin API tokens.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/auth/login
+    metadata:
+      custom: []
+      groupName: 'Admin Auth'
+      groupDescription: |-
+
+        Endpoints for issuing and revoking Laravel Sanctum admin API tokens.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Authenticate an admin user and issue a Sanctum token.'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
+        custom: []
+        name: email
+        description: 'Admin email address.'
+        required: true
+        example: admin@limosudcars.local
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: 'Admin password.'
+        required: true
+        example: password
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: admin@limosudcars.local
+      password: password
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/auth/me
+    metadata:
+      custom: []
+      groupName: 'Admin Auth'
+      groupDescription: |-
+
+        Endpoints for issuing and revoking Laravel Sanctum admin API tokens.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Return the authenticated admin user with roles and permissions.'
+      description: 'Send a Sanctum bearer token in the Authorization header.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/auth/logout
+    metadata:
+      custom: []
+      groupName: 'Admin Auth'
+      groupDescription: |-
+
+        Endpoints for issuing and revoking Laravel Sanctum admin API tokens.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Revoke the current Sanctum token.'
+      description: 'Send a Sanctum bearer token in the Authorization header.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null

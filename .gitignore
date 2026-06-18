@@ -1,0 +1,41 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# ─── QA generated artifacts (local only — never commit) ─────────────────────
+# QA generated reports
+/storage/qa/reports/
+
+# Local QA manifest
+/storage/qa/qa-manifest.json
+
+# Generated Postman environment (may contain secrets)
+# Note: *.postman_environment.example.json is safe to commit (template only).
+/storage/qa/postman/*environment.json
+
+# Local Newman output
+/newman/
+
+# Temporary QA exports
+/storage/qa/tmp/

@@ -1,0 +1,491 @@
+name: Locations
+description: |-
+
+  Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/locations
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List locations for the admin dashboard.'
+      description: 'Requires permission: `locations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/locations
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Store a new location.'
+      description: 'Requires permission: `locations.create`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      location_type_slug:
+        custom: []
+        name: location_type_slug
+        description: 'Location type slug.'
+        required: true
+        example: agency
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Location name.'
+        required: true
+        example: 'Dakhla Agency'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      slug:
+        custom: []
+        name: slug
+        description: 'Unique location slug.'
+        required: true
+        example: dakhla-agency
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'optional Location address.'
+        required: false
+        example: 'Avenue Mohammed V, Dakhla'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      delivery_fee:
+        custom: []
+        name: delivery_fee
+        description: 'optional Delivery fee.'
+        required: false
+        example: 100.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: 'optional Whether public users can choose this location.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      location_type_slug: agency
+      name: 'Dakhla Agency'
+      slug: dakhla-agency
+      address: 'Avenue Mohammed V, Dakhla'
+      delivery_fee: 100.0
+      is_active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/admin/locations/{location_id}'
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Display a location.'
+      description: 'Requires permission: `locations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      location_id:
+        custom: []
+        name: location_id
+        description: 'The ID of the location.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      location_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/admin/locations/{location_id}'
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a location.'
+      description: 'Requires permission: `locations.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      location_id:
+        custom: []
+        name: location_id
+        description: 'The ID of the location.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      location_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      location_type_slug:
+        custom: []
+        name: location_type_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'optional Location name.'
+        required: false
+        example: 'Dakhla Airport'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      slug:
+        custom: []
+        name: slug
+        description: 'Must contain only letters, numbers, dashes and underscores. Must not be greater than 255 characters.'
+        required: false
+        example: mniihfqcoynlazghdtqtq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: xbajwbpilpmufinllwloa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      delivery_fee:
+        custom: []
+        name: delivery_fee
+        description: 'optional Delivery fee.'
+        required: false
+        example: 150.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: 'optional Whether public users can choose this location.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      location_type_slug: consequatur
+      name: 'Dakhla Airport'
+      slug: mniihfqcoynlazghdtqtq
+      address: xbajwbpilpmufinllwloa
+      delivery_fee: 150.0
+      is_active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/locations/{location_id}'
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a location.'
+      description: 'Requires permission: `locations.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      location_id:
+        custom: []
+        name: location_id
+        description: 'The ID of the location.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      location_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      location_type_slug:
+        custom: []
+        name: location_type_slug
+        description: 'Must match an existing stored value.'
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'optional Location name.'
+        required: false
+        example: 'Dakhla Airport'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      slug:
+        custom: []
+        name: slug
+        description: 'Must contain only letters, numbers, dashes and underscores. Must not be greater than 255 characters.'
+        required: false
+        example: mniihfqcoynlazghdtqtq
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: xbajwbpilpmufinllwloa
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      delivery_fee:
+        custom: []
+        name: delivery_fee
+        description: 'optional Delivery fee.'
+        required: false
+        example: 150.0
+        type: number
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: 'optional Whether public users can choose this location.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      location_type_slug: consequatur
+      name: 'Dakhla Airport'
+      slug: mniihfqcoynlazghdtqtq
+      address: xbajwbpilpmufinllwloa
+      delivery_fee: 150.0
+      is_active: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/admin/locations/{location_id}'
+    metadata:
+      custom: []
+      groupName: Locations
+      groupDescription: |-
+
+        Admin location endpoints. Requires the matching `locations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Soft delete a location.'
+      description: 'Requires permission: `locations.delete`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      location_id:
+        custom: []
+        name: location_id
+        description: 'The ID of the location.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      location_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null

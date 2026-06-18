@@ -1,0 +1,954 @@
+name: Reservations
+description: |-
+
+  Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/reservations
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List reservations for the admin dashboard.'
+      description: 'Requires permission: `reservations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/reservations
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Store a manually created admin reservation.'
+      description: 'Requires permission: `reservations.create`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'Existing customer ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      vehicle_id:
+        custom: []
+        name: vehicle_id
+        description: 'Existing vehicle ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      pickup_location_id:
+        custom: []
+        name: pickup_location_id
+        description: 'Pickup location ID.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      dropoff_location_id:
+        custom: []
+        name: dropoff_location_id
+        description: 'Dropoff location ID.'
+        required: true
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      start_datetime:
+        custom: []
+        name: start_datetime
+        description: 'Reservation start datetime.'
+        required: true
+        example: '2026-07-01 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      end_datetime:
+        custom: []
+        name: end_datetime
+        description: 'Reservation end datetime.'
+        required: true
+        example: '2026-07-05 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_notes:
+        custom: []
+        name: customer_notes
+        description: 'optional Customer-facing notes.'
+        required: false
+        example: 'Airport pickup.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      admin_notes:
+        custom: []
+        name: admin_notes
+        description: 'optional Internal admin notes.'
+        required: false
+        example: 'Confirm license before pickup.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 1
+      vehicle_id: 1
+      pickup_location_id: 1
+      dropoff_location_id: 2
+      start_datetime: '2026-07-01 10:00:00'
+      end_datetime: '2026-07-05 10:00:00'
+      customer_notes: 'Airport pickup.'
+      admin_notes: 'Confirm license before pickup.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/admin/reservations/check-availability
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Check vehicle availability for admin workflows.'
+      description: 'Requires permission: `reservations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      vehicle_id:
+        custom: []
+        name: vehicle_id
+        description: 'Vehicle ID to check.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      start_datetime:
+        custom: []
+        name: start_datetime
+        description: 'Start datetime.'
+        required: true
+        example: '2026-07-01 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      end_datetime:
+        custom: []
+        name: end_datetime
+        description: 'End datetime.'
+        required: true
+        example: '2026-07-05 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      ignore_reservation_id:
+        custom: []
+        name: ignore_reservation_id
+        description: 'optional Reservation ID to ignore when updating.'
+        required: false
+        example: 10
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      vehicle_id: 1
+      start_datetime: '2026-07-01 10:00:00'
+      end_datetime: '2026-07-05 10:00:00'
+      ignore_reservation_id: 10
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/admin/reservations-calendar
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Return reservations in a lightweight calendar collection.'
+      description: 'Requires permission: `reservations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      start:
+        custom: []
+        name: start
+        description: 'date optional Include reservations ending on or after this date.'
+        required: false
+        example: '2026-07-01'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      end:
+        custom: []
+        name: end
+        description: 'date optional Include reservations starting on or before this date.'
+        required: false
+        example: '2026-07-31'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      start: '2026-07-01'
+      end: '2026-07-31'
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/admin/reservations/{reservation_id}'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Display a reservation.'
+      description: 'Requires permission: `reservations.view`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+    uri: 'api/admin/reservations/{reservation_id}'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a reservation and recalculate pricing when booking inputs change.'
+      description: 'Requires permission: `reservations.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      vehicle_id:
+        custom: []
+        name: vehicle_id
+        description: 'optional Existing vehicle ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      pickup_location_id:
+        custom: []
+        name: pickup_location_id
+        description: 'optional Pickup location ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      dropoff_location_id:
+        custom: []
+        name: dropoff_location_id
+        description: 'optional Dropoff location ID.'
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      start_datetime:
+        custom: []
+        name: start_datetime
+        description: 'optional Reservation start datetime.'
+        required: false
+        example: '2026-07-02 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      end_datetime:
+        custom: []
+        name: end_datetime
+        description: 'optional Reservation end datetime.'
+        required: false
+        example: '2026-07-06 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_notes:
+        custom: []
+        name: customer_notes
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      admin_notes:
+        custom: []
+        name: admin_notes
+        description: 'optional Internal admin notes.'
+        required: false
+        example: 'Updated pickup time.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 17
+      vehicle_id: 1
+      pickup_location_id: 1
+      dropoff_location_id: 2
+      start_datetime: '2026-07-02 10:00:00'
+      end_datetime: '2026-07-06 10:00:00'
+      customer_notes: consequatur
+      admin_notes: 'Updated pickup time.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/admin/reservations/{reservation_id}'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a reservation and recalculate pricing when booking inputs change.'
+      description: 'Requires permission: `reservations.update`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      customer_id:
+        custom: []
+        name: customer_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      vehicle_id:
+        custom: []
+        name: vehicle_id
+        description: 'optional Existing vehicle ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      pickup_location_id:
+        custom: []
+        name: pickup_location_id
+        description: 'optional Pickup location ID.'
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      dropoff_location_id:
+        custom: []
+        name: dropoff_location_id
+        description: 'optional Dropoff location ID.'
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      start_datetime:
+        custom: []
+        name: start_datetime
+        description: 'optional Reservation start datetime.'
+        required: false
+        example: '2026-07-02 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      end_datetime:
+        custom: []
+        name: end_datetime
+        description: 'optional Reservation end datetime.'
+        required: false
+        example: '2026-07-06 10:00:00'
+        type: datetime
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      customer_notes:
+        custom: []
+        name: customer_notes
+        description: ''
+        required: false
+        example: consequatur
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      admin_notes:
+        custom: []
+        name: admin_notes
+        description: 'optional Internal admin notes.'
+        required: false
+        example: 'Updated pickup time.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      customer_id: 17
+      vehicle_id: 1
+      pickup_location_id: 1
+      dropoff_location_id: 2
+      start_datetime: '2026-07-02 10:00:00'
+      end_datetime: '2026-07-06 10:00:00'
+      customer_notes: consequatur
+      admin_notes: 'Updated pickup time.'
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/admin/reservations/{reservation_id}'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Soft delete a reservation.'
+      description: 'Requires permission: `reservations.delete`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/reservations/{reservation_id}/confirm'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Confirm a pending reservation and reserve the vehicle.'
+      description: 'Requires permission: `reservations.confirm`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/reservations/{reservation_id}/start'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Start a confirmed reservation.'
+      description: 'Requires permission: `reservations.start`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/reservations/{reservation_id}/complete'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Complete an in-progress reservation.'
+      description: 'Requires permission: `reservations.complete`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/reservations/{reservation_id}/cancel'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Cancel a reservation and free reserved/rented vehicles.'
+      description: 'Requires permission: `reservations.cancel`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/admin/reservations/{reservation_id}/reject'
+    metadata:
+      custom: []
+      groupName: Reservations
+      groupDescription: |-
+
+        Admin reservation endpoints. Requires the matching `reservations.*` permission listed on each endpoint.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Reject a pending reservation request.'
+      description: 'Requires permission: `reservations.reject`.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {SANCTUM_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      reservation_id:
+        custom: []
+        name: reservation_id
+        description: 'The ID of the reservation.'
+        required: true
+        example: 17
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      reservation_id: 17
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 3V5EgbkvZcDPa166h8fd4ae'
+    controller: null
+    method: null
+    route: null
