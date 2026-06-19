@@ -14,6 +14,7 @@ use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
 use App\Models\VehicleStatus;
+use App\Services\PaymentService;
 use App\Services\ReservationPricingService;
 use App\Services\VehicleAvailabilityService;
 use Illuminate\Http\JsonResponse;
@@ -35,12 +36,14 @@ class ReservationController extends Controller
      *
      * Requires permission: `reservations.view`.
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = min(max((int) $request->integer('per_page', 15), 1), 100);
+
         $reservations = Reservation::query()
             ->with($this->relationships())
             ->latest()
-            ->paginate(15);
+            ->paginate($perPage);
 
         return ReservationResource::collection($reservations);
     }
@@ -122,9 +125,13 @@ class ReservationController extends Controller
         UpdateReservationRequest $request,
         Reservation $reservation,
         VehicleAvailabilityService $availabilityService,
-        ReservationPricingService $pricingService
+        ReservationPricingService $pricingService,
+        PaymentService $paymentService
     ): ReservationResource {
-        DB::transaction(function () use ($request, $reservation, $availabilityService, $pricingService): void {
+        DB::transaction(function () use ($request, $reservation, $availabilityService, $pricingService, $paymentService): void {
+            $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+            $this->ensureNotTerminalStatus($reservation);
+
             $data = $request->validated();
             $vehicle = Vehicle::findOrFail($data['vehicle_id'] ?? $reservation->vehicle_id);
             $pickupLocation = Location::findOrFail($data['pickup_location_id'] ?? $reservation->pickup_location_id);
@@ -144,6 +151,8 @@ class ReservationController extends Controller
                 'end_datetime' => $endDatetime,
                 ...$pricing,
             ]);
+
+            $paymentService->recalculateReservationPaymentStatus($reservation->fresh());
         });
 
         return new ReservationResource($reservation->load($this->relationships()));
@@ -435,6 +444,18 @@ class ReservationController extends Controller
         if (in_array($reservation->status?->slug, $blockedStatuses, true)) {
             throw ValidationException::withMessages([
                 'status' => 'The reservation status does not allow this action.',
+            ]);
+        }
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function ensureNotTerminalStatus(Reservation $reservation): void
+    {
+        if (in_array($reservation->status?->slug, ['completed', 'cancelled', 'rejected'], true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Completed, cancelled, or rejected reservations cannot be edited.',
             ]);
         }
     }

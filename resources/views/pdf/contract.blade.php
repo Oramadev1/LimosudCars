@@ -32,13 +32,29 @@
             width: 35%;
         }
 
+        .brand {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .brand img {
+            height: 90px;
+            width: auto;
+        }
+
         .signature {
             margin-top: 48px;
         }
     </style>
 </head>
 <body>
-    <h1>Limosud Cars Rental Contract</h1>
+    @if (!empty($logoData))
+        <div class="brand">
+            <img src="data:image/jpeg;base64,{{ $logoData }}" alt="Limosud Cars">
+        </div>
+    @endif
+
+    <h1>Rental Contract</h1>
     <p><strong>Contract Number:</strong> {{ $contractNumber }}</p>
     <p><strong>Reservation Number:</strong> {{ $reservation->reservation_number }}</p>
 
@@ -80,7 +96,7 @@
 
     <div class="signature">
         <p>Customer Signature: ______________________________</p>
-        <p>Limosud Cars Representative: ______________________</p>
+        <p>Agency Representative: ______________________</p>
     </div>
 </body>
 </html>

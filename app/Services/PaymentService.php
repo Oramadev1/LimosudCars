@@ -48,9 +48,13 @@ class PaymentService
             $payment = Payment::whereKey($payment->id)->lockForUpdate()->firstOrFail();
             $oldReservationId = $payment->reservation_id;
             $paymentData = $this->preparePaymentData($data, false);
+            $targetReservationId = $paymentData['reservation_id'] ?? $payment->reservation_id;
 
-            if (array_key_exists('reservation_id', $paymentData)) {
-                Reservation::whereKey($paymentData['reservation_id'])->lockForUpdate()->firstOrFail();
+            $targetReservation = Reservation::whereKey($targetReservationId)->lockForUpdate()->firstOrFail();
+            $this->ensurePaymentAllowed($targetReservation);
+
+            if (array_key_exists('reservation_id', $paymentData) && $paymentData['reservation_id'] !== $oldReservationId) {
+                Reservation::whereKey($oldReservationId)->lockForUpdate()->firstOrFail();
             }
 
             $payment->update($paymentData);
