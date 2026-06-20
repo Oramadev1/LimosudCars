@@ -27,9 +27,12 @@ return [
         'https://limosudcars.com',
         'https://www.limosudcars.com',
         'https://admin.limosudcars.com',
+        'https://limosud-cars-admin.vercel.app',
     ], array_filter(explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))))),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https:\/\/limosud-cars[\w-]*\.vercel\.app$/',
+    ],
 
     'allowed_headers' => ['*'],
 
