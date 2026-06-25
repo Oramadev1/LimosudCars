@@ -19,6 +19,12 @@ class VehicleBrandSeeder extends Seeder
             ['name' => 'Toyota', 'slug' => 'toyota'],
             ['name' => 'Volkswagen', 'slug' => 'volkswagen'],
             ['name' => 'Peugeot', 'slug' => 'peugeot'],
+            ['name' => 'Skoda', 'slug' => 'skoda'],
+            ['name' => 'Opel', 'slug' => 'opel'],
+            ['name' => 'Suzuki', 'slug' => 'suzuki'],
+            ['name' => 'Nissan', 'slug' => 'nissan'],
+            ['name' => 'Kia', 'slug' => 'kia'],
+            ['name' => 'Fiat', 'slug' => 'fiat'],
         ];
 
         foreach ($brands as $brand) {
