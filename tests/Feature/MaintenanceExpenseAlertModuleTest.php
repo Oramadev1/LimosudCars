@@ -132,11 +132,6 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
             ->json('data.id');
 
         $this->withToken($token)
-            ->patchJson("/api/admin/alerts/{$alertId}/seen")
-            ->assertOk()
-            ->assertJsonPath('data.alert_status.slug', 'seen');
-
-        $this->withToken($token)
             ->patchJson("/api/admin/alerts/{$alertId}/done")
             ->assertOk()
             ->assertJsonPath('data.alert_status.slug', 'done');
@@ -196,29 +191,45 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
         $this->assertSame($vehicle->id, $alert->vehicle_id);
     }
 
+    public function test_generate_endpoint_does_not_recreate_handled_alerts(): void
+    {
+        $this->seed();
+        $token = $this->adminToken();
+        $vehicle = $this->vehicle();
+
+        VehicleMaintenance::create([
+            'vehicle_id' => $vehicle->id,
+            'maintenance_type_id' => MaintenanceType::where('slug', 'inspection')->value('id'),
+            'maintenance_date' => now()->subMonth()->toDateString(),
+            'next_maintenance_date' => now()->addDays(7)->toDateString(),
+            'cost' => 0,
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/admin/alerts/generate')
+            ->assertOk()
+            ->assertJsonPath('total_created', 1);
+
+        $alertId = Alert::firstOrFail()->id;
+
+        $this->withToken($token)
+            ->patchJson("/api/admin/alerts/{$alertId}/done")
+            ->assertOk();
+
+        $this->withToken($token)
+            ->postJson('/api/admin/alerts/generate')
+            ->assertOk()
+            ->assertJsonPath('total_created', 0);
+
+        $this->assertSame(1, Alert::count());
+    }
+
     private function vehicle(): Vehicle
     {
-        return Vehicle::create([
-            'brand_id' => VehicleBrand::where('slug', 'dacia')->value('id'),
-            'category_id' => VehicleCategory::where('slug', 'economy')->value('id'),
-            'status_id' => VehicleStatus::where('slug', 'available')->value('id'),
-            'transmission_type_id' => TransmissionType::where('slug', 'manual')->value('id'),
-            'fuel_type_id' => FuelType::where('slug', 'diesel')->value('id'),
+        return Vehicle::factory()->create([
             'name' => 'Maintenance Test Car '.fake()->unique()->numerify('###'),
             'slug' => 'maintenance-test-car-'.fake()->unique()->numerify('###'),
-            'model' => 'Sandero',
-            'year' => 2024,
             'plate_number' => fake()->unique()->bothify('MNT###'),
-            'mileage' => 20000,
-            'current_mileage_updated_at' => now(),
-            'seats' => 5,
-            'doors' => 5,
-            'daily_price' => 350,
-            'weekly_price' => 2200,
-            'monthly_price' => 8500,
-            'deposit_amount' => 3000,
-            'is_featured' => false,
-            'is_active' => true,
         ]);
     }
 

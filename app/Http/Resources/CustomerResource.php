@@ -26,6 +26,7 @@ class CustomerResource extends JsonResource
             'email' => $this->email,
             'passport_or_cin' => $this->passport_or_cin,
             'driving_license_number' => $this->driving_license_number,
+            'reservations_count' => $this->when(isset($this->reservations_count), $this->reservations_count),
             'documents' => CustomerDocumentResource::collection($this->whenLoaded('documents')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

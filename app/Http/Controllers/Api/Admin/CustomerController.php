@@ -7,10 +7,12 @@ use App\Http\Requests\Admin\StoreCustomerDocumentRequest;
 use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Http\Resources\CustomerDocumentResource;
+use App\Http\Resources\CustomerReservationSummaryResource;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Models\CustomerDocument;
 use App\Models\DocumentType;
+use App\Services\CustomerStatisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -32,6 +34,7 @@ class CustomerController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $customers = Customer::query()
+            ->withCount('reservations')
             ->latest()
             ->paginate(15);
 
@@ -64,9 +67,17 @@ class CustomerController extends Controller
      *
      * Requires permission: `customers.view`.
      */
-    public function show(Customer $customer): CustomerResource
+    public function show(Customer $customer, CustomerStatisticsService $statisticsService): JsonResponse
     {
-        return new CustomerResource($customer->load('documents.documentType'));
+        $customer->load('documents.documentType');
+
+        return response()->json([
+            'data' => new CustomerResource($customer),
+            'statistics' => $statisticsService->forCustomer($customer),
+            'recent_reservations' => CustomerReservationSummaryResource::collection(
+                $statisticsService->recentReservations($customer),
+            ),
+        ]);
     }
 
     /**

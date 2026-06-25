@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Alert;
 use App\Models\AlertStatus;
 use App\Models\AlertType;
+use App\Models\Reservation;
 use App\Models\VehicleDocument;
 use App\Models\VehicleMaintenance;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ class AlertService
             $statusId = $this->alertStatusId($data['alert_status_slug'] ?? 'pending');
 
             if (($data['alert_status_slug'] ?? 'pending') === 'pending') {
-                $existing = $this->pendingDuplicate($data['vehicle_id'] ?? null, $alertTypeId, $data['due_date'] ?? null);
+                $existing = $this->existingDuplicate($data['vehicle_id'] ?? null, $alertTypeId, $data['due_date'] ?? null);
 
                 if ($existing) {
                     return $existing;
@@ -44,12 +45,12 @@ class AlertService
 
     public function markDone(Alert $alert): Alert
     {
-        return $this->transition($alert, 'done', ['pending', 'seen']);
+        return $this->transition($alert, 'done', ['pending']);
     }
 
     public function ignore(Alert $alert): Alert
     {
-        return $this->transition($alert, 'ignored', ['pending', 'seen']);
+        return $this->transition($alert, 'ignored', ['pending']);
     }
 
     public function generateMaintenanceAlerts(): int
@@ -75,6 +76,63 @@ class AlertService
             });
 
         return $count;
+    }
+
+    public function createReservationFollowUpAlert(Reservation $reservation): Alert
+    {
+        return DB::transaction(function () use ($reservation): Alert {
+            $reservation->loadMissing(['vehicle', 'customer', 'source']);
+
+            $title = $this->reservationFollowUpTitle($reservation);
+            $typeId = $this->alertTypeId('reservation_follow_up');
+
+            $existing = Alert::query()
+                ->where('alert_type_id', $typeId)
+                ->where(function ($query) use ($reservation, $title): void {
+                    $query->where('reservation_id', $reservation->id)
+                        ->orWhere('title', $title);
+                })
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+
+            $vehicleName = $reservation->vehicle?->name ?? ('Vehicle #'.$reservation->vehicle_id);
+            $customerName = $reservation->customer?->full_name ?? 'Customer';
+            $sourceName = $reservation->source?->name ?? 'Unknown';
+            $start = $reservation->start_datetime?->format('Y-m-d H:i');
+
+            return Alert::create([
+                'vehicle_id' => $reservation->vehicle_id,
+                'reservation_id' => $reservation->id,
+                'alert_type_id' => $typeId,
+                'alert_status_id' => $this->alertStatusId('pending'),
+                'title' => $title,
+                'message' => sprintf(
+                    '%s requested %s from %s (%s). Review and confirm or reject.',
+                    $customerName,
+                    $vehicleName,
+                    $start ?? 'TBD',
+                    $sourceName
+                ),
+                'due_date' => $reservation->start_datetime?->toDateString(),
+            ]);
+        });
+    }
+
+    public function resolveReservationFollowUpAlert(Reservation $reservation): void
+    {
+        Alert::query()
+            ->where('alert_type_id', $this->alertTypeId('reservation_follow_up'))
+            ->where(function ($query) use ($reservation): void {
+                $query->where('reservation_id', $reservation->id)
+                    ->orWhere('title', $this->reservationFollowUpTitle($reservation));
+            })
+            ->where('alert_status_id', $this->alertStatusId('pending'))
+            ->update([
+                'alert_status_id' => $this->alertStatusId('done'),
+            ]);
     }
 
     public function generateDocumentExpiryAlerts(): int
@@ -122,10 +180,9 @@ class AlertService
         });
     }
 
-    private function pendingDuplicate(?int $vehicleId, int $alertTypeId, ?string $dueDate): ?Alert
+    private function existingDuplicate(?int $vehicleId, int $alertTypeId, ?string $dueDate): ?Alert
     {
         $query = Alert::query()
-            ->where('alert_status_id', $this->alertStatusId('pending'))
             ->where('alert_type_id', $alertTypeId)
             ->where('vehicle_id', $vehicleId);
 
@@ -134,6 +191,11 @@ class AlertService
             : $query->whereDate('due_date', $dueDate);
 
         return $query->first();
+    }
+
+    private function reservationFollowUpTitle(Reservation $reservation): string
+    {
+        return 'New reservation '.$reservation->reservation_number;
     }
 
     private function alertTypeId(string $slug): int

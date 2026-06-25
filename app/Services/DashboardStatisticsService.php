@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Alert;
-use App\Models\AlertStatus;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Payment;
@@ -11,6 +9,7 @@ use App\Models\PaymentStatus;
 use App\Models\Reservation;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
+use App\Models\VehicleMaintenance;
 use App\Models\VehicleStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
@@ -25,10 +24,7 @@ class DashboardStatisticsService
     {
         $month ??= now();
         $monthlyRevenue = $this->paidPaymentsBetween($month->copy()->startOfMonth(), $month->copy()->endOfMonth())->sum('amount');
-        $monthlyExpenses = Expense::query()
-            ->whereDate('expense_date', '>=', $month->copy()->startOfMonth()->toDateString())
-            ->whereDate('expense_date', '<=', $month->copy()->endOfMonth()->toDateString())
-            ->sum('amount');
+        $monthlyExpenses = $this->monthlyExpensesForPeriod($month->copy()->startOfMonth(), $month->copy()->endOfMonth());
 
         return [
             'global_kpis' => [
@@ -41,7 +37,8 @@ class DashboardStatisticsService
                 'out_of_service_vehicles' => $this->vehicleCountByStatus('out_of_service'),
                 'total_customers' => Customer::count(),
                 'total_reservations' => Reservation::count(),
-                'pending_reservations' => $this->reservationCountByStatus('pending'),
+                'reservations_today' => $this->reservationsTodayCount(),
+                'reservations_this_month' => $this->reservationsThisMonthCount($month),
                 'confirmed_reservations' => $this->reservationCountByStatus('confirmed'),
                 'in_progress_reservations' => $this->reservationCountByStatus('in_progress'),
                 'completed_reservations' => $this->reservationCountByStatus('completed'),
@@ -49,7 +46,6 @@ class DashboardStatisticsService
                 'unpaid_reservations' => $this->reservationCountByPaymentStatus('unpaid'),
                 'partial_paid_reservations' => $this->reservationCountByPaymentStatus('partial_paid'),
                 'paid_reservations' => $this->reservationCountByPaymentStatus('paid'),
-                'pending_alerts' => $this->pendingAlertCount(),
                 'monthly_revenue' => $this->money($monthlyRevenue),
                 'monthly_expenses' => $this->money($monthlyExpenses),
                 'monthly_net_profit' => $this->money($monthlyRevenue - $monthlyExpenses),
@@ -90,10 +86,7 @@ class DashboardStatisticsService
             ->whereDate('expense_date', '<=', $endDate->toDateString());
 
         return [
-            'monthly_expenses' => $this->money(Expense::query()
-                ->whereDate('expense_date', '>=', now()->startOfMonth()->toDateString())
-                ->whereDate('expense_date', '<=', now()->endOfMonth()->toDateString())
-                ->sum('amount')),
+            'monthly_expenses' => $this->money($this->monthlyExpensesForPeriod(now()->startOfMonth(), now()->endOfMonth())),
             'date_range_expenses' => $this->money((clone $rangeQuery)->sum('amount')),
             'date_range' => [
                 'start_date' => $startDate->toDateString(),
@@ -149,6 +142,47 @@ class DashboardStatisticsService
             ->count();
     }
 
+    private function reservationsTodayCount(): int
+    {
+        return Reservation::query()
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+    }
+
+    private function reservationsThisMonthCount(Carbon $month): int
+    {
+        return Reservation::query()
+            ->whereDate('created_at', '>=', $month->copy()->startOfMonth()->toDateString())
+            ->whereDate('created_at', '<=', $month->copy()->endOfMonth()->toDateString())
+            ->count();
+    }
+
+    private function monthlyExpensesForPeriod(Carbon $startDate, Carbon $endDate): float
+    {
+        return (float) Expense::query()
+            ->whereDate('expense_date', '>=', $startDate->toDateString())
+            ->whereDate('expense_date', '<=', $endDate->toDateString())
+            ->sum('amount')
+            + $this->maintenanceCostsWithoutExpenseBetween($startDate, $endDate);
+    }
+
+    private function maintenanceCostsWithoutExpenseBetween(Carbon $startDate, Carbon $endDate): float
+    {
+        return (float) VehicleMaintenance::query()
+            ->whereDate('maintenance_date', '>=', $startDate->toDateString())
+            ->whereDate('maintenance_date', '<=', $endDate->toDateString())
+            ->where('cost', '>', 0)
+            ->whereNotExists(function ($query): void {
+                $query->select(DB::raw(1))
+                    ->from('expenses')
+                    ->whereColumn('expenses.vehicle_id', 'vehicle_maintenances.vehicle_id')
+                    ->whereColumn('expenses.amount', 'vehicle_maintenances.cost')
+                    ->whereColumn('expenses.expense_date', 'vehicle_maintenances.maintenance_date')
+                    ->whereNull('expenses.deleted_at');
+            })
+            ->sum('cost');
+    }
+
     private function reservationCountByPaymentStatus(string $slug): int
     {
         $statusId = PaymentStatus::where('slug', $slug)->value('id');
@@ -159,19 +193,6 @@ class DashboardStatisticsService
 
         return Reservation::query()
             ->where('payment_status_id', $statusId)
-            ->count();
-    }
-
-    private function pendingAlertCount(): int
-    {
-        $statusId = AlertStatus::where('slug', 'pending')->value('id');
-
-        if ($statusId === null) {
-            return 0;
-        }
-
-        return Alert::query()
-            ->where('alert_status_id', $statusId)
             ->count();
     }
 
@@ -226,7 +247,7 @@ class DashboardStatisticsService
      */
     private function expensesByCategory(Carbon $startDate, Carbon $endDate): array
     {
-        return Expense::query()
+        $categories = Expense::query()
             ->join('expense_categories', 'expenses.expense_category_id', '=', 'expense_categories.id')
             ->whereDate('expense_date', '>=', $startDate->toDateString())
             ->whereDate('expense_date', '<=', $endDate->toDateString())
@@ -234,8 +255,28 @@ class DashboardStatisticsService
             ->selectRaw('SUM(expenses.amount) as total_amount')
             ->selectRaw('COUNT(*) as expense_count')
             ->groupBy('expense_categories.slug', 'expense_categories.name')
-            ->orderByDesc('total_amount')
             ->get()
+            ->keyBy('slug');
+
+        $maintenanceExtra = $this->maintenanceCostsWithoutExpenseBetween($startDate, $endDate);
+
+        if ($maintenanceExtra > 0) {
+            if ($categories->has('maintenance')) {
+                $row = $categories->get('maintenance');
+                $row->total_amount = (float) $row->total_amount + $maintenanceExtra;
+            } else {
+                $categories->put('maintenance', (object) [
+                    'slug' => 'maintenance',
+                    'name' => 'Maintenance',
+                    'total_amount' => $maintenanceExtra,
+                    'expense_count' => 0,
+                ]);
+            }
+        }
+
+        return $categories
+            ->sortByDesc(fn ($row): float => (float) $row->total_amount)
+            ->values()
             ->map(fn ($row): array => [
                 'slug' => $row->slug,
                 'name' => $row->name,

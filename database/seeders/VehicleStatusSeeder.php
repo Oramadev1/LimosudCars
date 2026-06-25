@@ -22,7 +22,6 @@ class VehicleStatusSeeder extends Seeder
             'maintenance' => 'Maintenance',
             'repair' => 'Repair',
             'out_of_service' => 'Out of Service',
-            'sold' => 'Sold',
         ]);
     }
 }

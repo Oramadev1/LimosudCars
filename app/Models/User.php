@@ -3,7 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
+use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -66,6 +67,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Extra permissions granted directly to the user (on top of role permissions).
+     *
+     * @return BelongsToMany<Permission, $this>
+     */
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions')
+            ->withTimestamps();
+    }
+
+    /**
      * @return HasMany<Reservation, $this>
      */
     public function createdReservations(): HasMany
@@ -122,11 +134,68 @@ class User extends Authenticatable
             return true;
         }
 
+        if ($this->permissions()
+            ->where('slug', $permission)
+            ->exists()) {
+            return true;
+        }
+
         return $this->roles()
             ->whereHas('permissions', function ($query) use ($permission): void {
                 $query->where('slug', $permission);
             })
             ->exists();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function rolePermissionSlugs(): array
+    {
+        if (! $this->relationLoaded('roles')) {
+            $this->load('roles.permissions');
+        }
+
+        return $this->roles
+            ->flatMap(fn (Role $role) => $role->permissions)
+            ->pluck('slug')
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function directPermissionSlugs(): array
+    {
+        if (! $this->relationLoaded('permissions')) {
+            $this->load('permissions');
+        }
+
+        return $this->permissions
+            ->pluck('slug')
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function effectivePermissionSlugs(): array
+    {
+        if ($this->isSuperAdmin()) {
+            return Permission::query()->orderBy('slug')->pluck('slug')->all();
+        }
+
+        return collect($this->rolePermissionSlugs())
+            ->merge($this->directPermissionSlugs())
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**

@@ -12,6 +12,7 @@ class Alert extends Model
 
     protected $fillable = [
         'vehicle_id',
+        'reservation_id',
         'alert_type_id',
         'alert_status_id',
         'title',
@@ -29,6 +30,11 @@ class Alert extends Model
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function reservation(): BelongsTo
+    {
+        return $this->belongsTo(Reservation::class);
     }
 
     public function alertType(): BelongsTo

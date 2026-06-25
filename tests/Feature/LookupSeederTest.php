@@ -59,7 +59,7 @@ class LookupSeederTest extends TestCase
     private function expectedLookups(): array
     {
         return [
-            'vehicle_statuses' => ['available', 'reserved', 'rented', 'maintenance', 'repair', 'out_of_service', 'sold'],
+            'vehicle_statuses' => ['available', 'reserved', 'rented', 'maintenance', 'repair', 'out_of_service'],
             'transmission_types' => ['manual', 'automatic'],
             'fuel_types' => ['gasoline', 'diesel', 'hybrid', 'electric'],
             'reservation_statuses' => ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'rejected'],

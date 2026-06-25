@@ -60,6 +60,7 @@ class MaintenanceController extends Controller
     {
         $maintenance = DB::transaction(function () use ($request): VehicleMaintenance {
             $data = $request->validated();
+            $data = $this->applyDefaultExpenseSync($data);
             $maintenance = VehicleMaintenance::create($this->maintenanceData($data));
 
             $this->updateVehicleStatusIfRequested($maintenance->vehicle, $data['vehicle_status_slug'] ?? null);
@@ -147,6 +148,20 @@ class MaintenanceController extends Controller
             ->paginate(15);
 
         return VehicleMaintenanceResource::collection($maintenances);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyDefaultExpenseSync(array $data): array
+    {
+        if (($data['cost'] ?? 0) > 0 && ! array_key_exists('create_expense', $data)) {
+            $data['create_expense'] = true;
+            $data['expense_category_slug'] ??= 'maintenance';
+        }
+
+        return $data;
     }
 
     /**

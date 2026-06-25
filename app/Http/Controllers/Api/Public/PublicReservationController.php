@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StorePublicReservationRequest;
 use App\Http\Requests\ReservationAvailabilityRequest;
 use App\Http\Resources\ReservationResource;
-use App\Models\Customer;
 use App\Models\Location;
 use App\Models\PaymentStatus;
 use App\Models\Reservation;
 use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
+use App\Services\AlertService;
+use App\Services\CustomerService;
 use App\Services\ReservationPricingService;
 use App\Services\VehicleAvailabilityService;
 use Illuminate\Http\JsonResponse;
@@ -47,9 +48,11 @@ class PublicReservationController extends Controller
     public function store(
         StorePublicReservationRequest $request,
         VehicleAvailabilityService $availabilityService,
-        ReservationPricingService $pricingService
+        ReservationPricingService $pricingService,
+        CustomerService $customerService,
+        AlertService $alertService,
     ): JsonResponse {
-        $reservation = DB::transaction(function () use ($request, $availabilityService, $pricingService): Reservation {
+        $reservation = DB::transaction(function () use ($request, $availabilityService, $pricingService, $customerService): Reservation {
             $data = $request->validated();
             $vehicle = Vehicle::findOrFail($data['vehicle_id']);
             $pickupLocation = Location::findOrFail($data['pickup_location_id']);
@@ -61,7 +64,7 @@ class PublicReservationController extends Controller
                 $data['end_datetime']
             );
 
-            $customer = Customer::create($data['customer']);
+            $customer = $customerService->findOrCreateFromPayload($data['customer']);
             $pricing = $pricingService->calculate($vehicle, $pickupLocation, $dropoffLocation, $data['start_datetime'], $data['end_datetime']);
 
             return Reservation::create([
@@ -79,6 +82,8 @@ class PublicReservationController extends Controller
                 ...$pricing,
             ]);
         });
+
+        $alertService->createReservationFollowUpAlert($reservation);
 
         return (new ReservationResource($reservation->load($this->relationships())))
             ->response()

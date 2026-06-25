@@ -24,6 +24,8 @@ return [
         'http://127.0.0.1:3000',
         'http://localhost:3001',
         'http://127.0.0.1:3001',
+        'http://192.168.1.4:3000',
+        'http://192.168.1.4:3001',
         'https://limosudcars.com',
         'https://www.limosudcars.com',
         'https://admin.limosudcars.com',
@@ -32,6 +34,7 @@ return [
 
     'allowed_origins_patterns' => [
         '/^https:\/\/limosud-cars[\w-]*\.vercel\.app$/',
+        '/^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:(3000|3001)$/',
     ],
 
     'allowed_headers' => ['*'],

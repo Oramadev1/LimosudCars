@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\LoginRequest;
+use App\Http\Requests\Admin\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -65,7 +66,30 @@ class AuthController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return new UserResource($user->load('roles.permissions'));
+        return new UserResource($user->load(['roles.permissions', 'permissions']));
+    }
+
+    /**
+     * Update the authenticated admin user's profile.
+     *
+     * Send a Sanctum bearer token in the Authorization header.
+     */
+    public function updateProfile(UpdateProfileRequest $request): UserResource
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $validated = $request->validated();
+
+        $user->fill(collect($validated)->only(['name', 'email', 'phone'])->all());
+
+        if (! empty($validated['password'])) {
+            $user->password = $validated['password'];
+        }
+
+        $user->save();
+
+        return new UserResource($user->load(['roles.permissions', 'permissions']));
     }
 
     /**

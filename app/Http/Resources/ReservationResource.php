@@ -27,8 +27,12 @@ class ReservationResource extends JsonResource
             'source' => $this->lookup('source'),
             'status' => $this->lookup('status'),
             'payment_status' => $this->lookup('paymentStatus'),
-            'pickup_location' => new LocationResource($this->whenLoaded('pickupLocation')),
-            'dropoff_location' => new LocationResource($this->whenLoaded('dropoffLocation')),
+            'pickup_location' => $this->whenLoaded('pickupLocation', fn (): ?LocationResource => $this->pickupLocation
+                ? new LocationResource($this->pickupLocation)
+                : null),
+            'dropoff_location' => $this->whenLoaded('dropoffLocation', fn (): ?LocationResource => $this->dropoffLocation
+                ? new LocationResource($this->dropoffLocation)
+                : null),
             'start_datetime' => $this->start_datetime,
             'end_datetime' => $this->end_datetime,
             'total_days' => $this->total_days,

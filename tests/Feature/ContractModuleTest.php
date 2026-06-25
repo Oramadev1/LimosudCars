@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Contract;
 use App\Models\ContractStatus;
 use App\Models\Customer;
-use App\Models\FuelType;
 use App\Models\Location;
 use App\Models\LocationType;
 use App\Models\Payment;
@@ -15,11 +14,7 @@ use App\Models\PaymentType;
 use App\Models\Reservation;
 use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
-use App\Models\TransmissionType;
 use App\Models\Vehicle;
-use App\Models\VehicleBrand;
-use App\Models\VehicleCategory;
-use App\Models\VehicleStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -28,6 +23,58 @@ use Tests\TestCase;
 class ContractModuleTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_generated_contract_pdf_uses_limosud_template_sections(): void
+    {
+        Storage::fake('local');
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+        $this->paidPayment($reservation, 300);
+
+        $this->withToken($this->adminToken())
+            ->postJson("/api/admin/reservations/{$reservation->id}/contract/generate")
+            ->assertOk();
+
+        $contract = Contract::firstOrFail();
+        $pdfContents = Storage::disk('local')->get($contract->pdf_path);
+
+        $this->assertNotEmpty($pdfContents);
+        $this->assertStringStartsWith('%PDF', $pdfContents);
+    }
+
+    public function test_contract_html_includes_limosud_form_sections(): void
+    {
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+        $reservation->loadMissing([
+            'customer',
+            'vehicle.brand',
+            'pickupLocation',
+            'dropoffLocation',
+            'payments.paymentMethod',
+        ]);
+
+        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
+            $reservation,
+            'CTR-20260615-1234',
+            300,
+            1200,
+            null,
+        ))->render();
+
+        $this->assertStringContainsString('LIMOSUD CARS', $html);
+        $this->assertStringContainsString('Locataire', $html);
+        $this->assertStringContainsString('المستأجر', $html);
+        $this->assertStringContainsString('conducteur supplémentaire', $html);
+        $this->assertStringContainsString('Prix total', $html);
+        $this->assertStringContainsString('5 000 dirhams', $html);
+        $this->assertStringContainsString('Le locataire', $html);
+        $this->assertStringContainsString('Le loueur', $html);
+        $this->assertStringContainsString('État voiture', $html);
+        $this->assertStringContainsString('Papier de Véhicule', $html);
+    }
 
     public function test_cannot_generate_contract_for_pending_reservation(): void
     {
@@ -116,6 +163,11 @@ class ContractModuleTest extends TestCase
         $this->assertNotNull($contract->signed_at);
         $this->assertSame(ContractStatus::where('slug', 'signed')->value('id'), $contract->status_id);
         Storage::disk('local')->assertExists($contract->signed_pdf_path);
+
+        $this->withToken($token)
+            ->postJson("/api/admin/contracts/{$contract->id}/signed")
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['contract']);
     }
 
     public function test_download_endpoint_returns_generated_pdf(): void
@@ -218,28 +270,7 @@ class ContractModuleTest extends TestCase
 
     private function vehicle(): Vehicle
     {
-        return Vehicle::create([
-            'brand_id' => VehicleBrand::where('slug', 'dacia')->value('id'),
-            'category_id' => VehicleCategory::where('slug', 'economy')->value('id'),
-            'status_id' => VehicleStatus::where('slug', 'available')->value('id'),
-            'transmission_type_id' => TransmissionType::where('slug', 'manual')->value('id'),
-            'fuel_type_id' => FuelType::where('slug', 'diesel')->value('id'),
-            'name' => 'Contract Test Car '.fake()->unique()->numerify('###'),
-            'slug' => 'contract-test-car-'.fake()->unique()->numerify('###'),
-            'model' => 'Sandero',
-            'year' => 2024,
-            'plate_number' => fake()->unique()->bothify('CTR###'),
-            'mileage' => 10000,
-            'current_mileage_updated_at' => now(),
-            'seats' => 5,
-            'doors' => 5,
-            'daily_price' => 300,
-            'weekly_price' => 1800,
-            'monthly_price' => 7200,
-            'deposit_amount' => 1000,
-            'is_featured' => false,
-            'is_active' => true,
-        ]);
+        return Vehicle::factory()->create();
     }
 
     /**

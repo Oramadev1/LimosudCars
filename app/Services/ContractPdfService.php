@@ -7,7 +7,7 @@ use App\Models\ContractStatus;
 use App\Models\PaymentStatus;
 use App\Models\Reservation;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Support\ContractViewData;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -41,13 +41,14 @@ class ContractPdfService
             'paymentStatus',
             'pickupLocation',
             'dropoffLocation',
+            'payments.paymentMethod',
             'payments.paymentStatus',
         ]);
 
         $html = $this->contractHtml($reservation, $contractNumber);
         $path = 'contracts/'.$contractNumber.'.pdf';
 
-        Storage::disk('local')->put($path, Pdf::loadHTML($html)->output());
+        Storage::disk('local')->put($path, app(ContractMpdfRenderer::class)->render($html));
 
         return $path;
     }
@@ -104,6 +105,20 @@ class ContractPdfService
     {
         return DB::transaction(function () use ($contract, $signedPdfFile): Contract {
             $contract = Contract::whereKey($contract->id)->lockForUpdate()->firstOrFail();
+            $contract->loadMissing('status');
+
+            if ($contract->status?->slug === 'signed') {
+                throw ValidationException::withMessages([
+                    'contract' => 'This contract is already marked as signed.',
+                ]);
+            }
+
+            if ($contract->status?->slug === 'cancelled') {
+                throw ValidationException::withMessages([
+                    'contract' => 'Cancelled contracts cannot be marked as signed.',
+                ]);
+            }
+
             $signedPdfPath = $contract->signed_pdf_path;
 
             if ($signedPdfFile) {
@@ -135,6 +150,19 @@ class ContractPdfService
     {
         return DB::transaction(function () use ($contract): Contract {
             $contract = Contract::whereKey($contract->id)->lockForUpdate()->firstOrFail();
+            $contract->loadMissing('status');
+
+            if ($contract->status?->slug === 'cancelled') {
+                throw ValidationException::withMessages([
+                    'contract' => 'This contract is already cancelled.',
+                ]);
+            }
+
+            if ($contract->status?->slug === 'signed') {
+                throw ValidationException::withMessages([
+                    'contract' => 'Signed contracts cannot be cancelled.',
+                ]);
+            }
 
             $contract->update([
                 'status_id' => $this->contractStatusId('cancelled'),
@@ -171,12 +199,14 @@ class ContractPdfService
         $logoPath = public_path('images/logo.jpg');
         $logoData = is_readable($logoPath) ? base64_encode((string) file_get_contents($logoPath)) : null;
 
-        return view('pdf.contract', [
-            'contractNumber' => $contractNumber,
-            'reservation' => $reservation,
-            'paidAmount' => $paidAmount,
-            'remainingAmount' => $remainingAmount,
-            'logoData' => $logoData,
-        ])->render();
+        $html = view('pdf.contract', ContractViewData::fromReservation(
+            $reservation,
+            $contractNumber,
+            $paidAmount,
+            $remainingAmount,
+            $logoData,
+        ))->render();
+
+        return $html;
     }
 }

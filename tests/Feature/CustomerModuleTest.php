@@ -5,6 +5,14 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\CustomerDocument;
 use App\Models\DocumentType;
+use App\Models\Payment;
+use App\Models\PaymentMethod;
+use App\Models\PaymentStatus;
+use App\Models\PaymentType;
+use App\Models\Reservation;
+use App\Models\ReservationSource;
+use App\Models\ReservationStatus;
+use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -101,9 +109,90 @@ class CustomerModuleTest extends TestCase
         Storage::disk('public')->assertMissing($document->file_path);
     }
 
+    public function test_customer_show_includes_statistics_and_recent_reservations(): void
+    {
+        $this->seed();
+
+        $token = $this->adminToken();
+        $customer = Customer::factory()->create();
+        $vehicle = Vehicle::factory()->create();
+        $sourceId = ReservationSource::where('slug', 'admin')->value('id');
+        $pendingStatusId = ReservationStatus::where('slug', 'pending')->value('id');
+        $unpaidStatusId = PaymentStatus::where('slug', 'unpaid')->value('id');
+
+        $reservation = Reservation::factory()->create([
+            'customer_id' => $customer->id,
+            'vehicle_id' => $vehicle->id,
+            'source_id' => $sourceId,
+            'status_id' => $pendingStatusId,
+            'payment_status_id' => $unpaidStatusId,
+            'total_price' => 1500,
+            'total_days' => 3,
+        ]);
+
+        Payment::factory()->create([
+            'reservation_id' => $reservation->id,
+            'payment_method_id' => PaymentMethod::where('slug', 'cash')->value('id'),
+            'payment_type_id' => PaymentType::where('slug', 'rental_payment')->value('id'),
+            'payment_status_id' => PaymentStatus::where('slug', 'paid')->value('id'),
+            'amount' => 500,
+        ]);
+
+        $this->withToken($token)
+            ->getJson("/api/admin/customers/{$customer->id}")
+            ->assertOk()
+            ->assertJsonPath('statistics.reservations_count', 1)
+            ->assertJsonPath('statistics.total_booked', '1500.00')
+            ->assertJsonPath('statistics.total_paid', '500.00')
+            ->assertJsonPath('statistics.total_outstanding', '1000.00')
+            ->assertJsonPath('recent_reservations.0.reservation_number', $reservation->reservation_number);
+    }
+
     public function test_customer_endpoints_require_authentication(): void
     {
         $this->getJson('/api/admin/customers')->assertUnauthorized();
+    }
+
+    public function test_admin_cannot_create_duplicate_customer_with_same_phone(): void
+    {
+        $this->seed();
+
+        $token = $this->adminToken();
+
+        Customer::factory()->create([
+            'phone' => '0635354343',
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/admin/customers', [
+                'full_name' => 'Another Ayoub',
+                'nationality' => 'Moroccan',
+                'phone' => '+212635354343',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['phone_normalized']);
+    }
+
+    public function test_admin_cannot_create_duplicate_customer_with_same_passport_or_cin(): void
+    {
+        $this->seed();
+
+        $token = $this->adminToken();
+
+        Customer::factory()->create([
+            'phone' => '0611111111',
+            'passport_or_cin' => 'AA123456',
+        ]);
+
+        $this->withToken($token)
+            ->postJson('/api/admin/customers', [
+                'full_name' => 'Same Person',
+                'nationality' => 'Moroccan',
+                'phone' => '0622222222',
+                'passport_or_cin' => 'AA 123-456',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['passport_or_cin_normalized']);
     }
 
     private function adminToken(): string

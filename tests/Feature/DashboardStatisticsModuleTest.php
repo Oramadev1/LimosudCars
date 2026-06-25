@@ -2,15 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Alert;
-use App\Models\AlertStatus;
-use App\Models\AlertType;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
-use App\Models\FuelType;
 use App\Models\Location;
 use App\Models\LocationType;
+use App\Models\MaintenanceType;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentStatus;
@@ -18,10 +15,8 @@ use App\Models\PaymentType;
 use App\Models\Reservation;
 use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
-use App\Models\TransmissionType;
 use App\Models\Vehicle;
-use App\Models\VehicleBrand;
-use App\Models\VehicleCategory;
+use App\Models\VehicleMaintenance;
 use App\Models\VehicleStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -62,13 +57,6 @@ class DashboardStatisticsModuleTest extends TestCase
             'amount' => 200,
             'expense_date' => $month->copy()->setDay(9)->toDateString(),
         ]);
-        Alert::create([
-            'vehicle_id' => $availableVehicle->id,
-            'alert_type_id' => AlertType::where('slug', 'maintenance_due')->value('id'),
-            'alert_status_id' => AlertStatus::where('slug', 'pending')->value('id'),
-            'title' => 'Maintenance due',
-            'due_date' => $month->copy()->addDays(5)->toDateString(),
-        ]);
 
         $this->withToken($token)
             ->getJson('/api/admin/dashboard/statistics?year='.$month->year.'&month='.$month->month)
@@ -82,7 +70,8 @@ class DashboardStatisticsModuleTest extends TestCase
             ->assertJsonPath('global_kpis.out_of_service_vehicles', 1)
             ->assertJsonPath('global_kpis.total_customers', 5)
             ->assertJsonPath('global_kpis.total_reservations', 5)
-            ->assertJsonPath('global_kpis.pending_reservations', 1)
+            ->assertJsonPath('global_kpis.reservations_today', 5)
+            ->assertJsonPath('global_kpis.reservations_this_month', 5)
             ->assertJsonPath('global_kpis.confirmed_reservations', 1)
             ->assertJsonPath('global_kpis.in_progress_reservations', 1)
             ->assertJsonPath('global_kpis.completed_reservations', 1)
@@ -90,10 +79,29 @@ class DashboardStatisticsModuleTest extends TestCase
             ->assertJsonPath('global_kpis.unpaid_reservations', 2)
             ->assertJsonPath('global_kpis.partial_paid_reservations', 1)
             ->assertJsonPath('global_kpis.paid_reservations', 2)
-            ->assertJsonPath('global_kpis.pending_alerts', 1)
             ->assertJsonPath('global_kpis.monthly_revenue', 700)
             ->assertJsonPath('global_kpis.monthly_expenses', 500)
             ->assertJsonPath('global_kpis.monthly_net_profit', 200);
+    }
+
+    public function test_dashboard_monthly_expenses_includes_maintenance_costs_without_linked_expense(): void
+    {
+        $this->seed();
+        $token = $this->adminToken();
+        $month = now();
+        $vehicle = $this->vehicle('available');
+
+        VehicleMaintenance::create([
+            'vehicle_id' => $vehicle->id,
+            'maintenance_type_id' => MaintenanceType::where('slug', 'oil_change')->value('id'),
+            'maintenance_date' => $month->copy()->setDay(12)->toDateString(),
+            'cost' => 350,
+        ]);
+
+        $this->withToken($token)
+            ->getJson('/api/admin/dashboard/statistics?year='.$month->year.'&month='.$month->month)
+            ->assertOk()
+            ->assertJsonPath('global_kpis.monthly_expenses', 350);
     }
 
     public function test_revenue_report_counts_only_paid_payments_and_groups_by_day(): void
@@ -197,29 +205,8 @@ class DashboardStatisticsModuleTest extends TestCase
 
     private function vehicle(string $statusSlug): Vehicle
     {
-        $name = 'Dashboard Test Car '.fake()->unique()->numerify('####');
-
-        return Vehicle::create([
-            'brand_id' => VehicleBrand::where('slug', 'dacia')->value('id'),
-            'category_id' => VehicleCategory::where('slug', 'economy')->value('id'),
+        return Vehicle::factory()->create([
             'status_id' => VehicleStatus::where('slug', $statusSlug)->value('id'),
-            'transmission_type_id' => TransmissionType::where('slug', 'manual')->value('id'),
-            'fuel_type_id' => FuelType::where('slug', 'diesel')->value('id'),
-            'name' => $name,
-            'slug' => str($name)->slug()->toString(),
-            'model' => 'Sandero',
-            'year' => 2024,
-            'plate_number' => fake()->unique()->bothify('DSH###'),
-            'mileage' => 20000,
-            'current_mileage_updated_at' => now(),
-            'seats' => 5,
-            'doors' => 5,
-            'daily_price' => 350,
-            'weekly_price' => 2200,
-            'monthly_price' => 8500,
-            'deposit_amount' => 3000,
-            'is_featured' => false,
-            'is_active' => true,
         ]);
     }
 

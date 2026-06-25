@@ -14,9 +14,11 @@ use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
 use App\Models\VehicleStatus;
+use App\Services\AlertService;
 use App\Services\PaymentService;
 use App\Services\ReservationPricingService;
 use App\Services\VehicleAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -65,7 +67,8 @@ class ReservationController extends Controller
     public function store(
         StoreReservationRequest $request,
         VehicleAvailabilityService $availabilityService,
-        ReservationPricingService $pricingService
+        ReservationPricingService $pricingService,
+        AlertService $alertService,
     ): JsonResponse {
         $reservation = DB::transaction(function () use ($request, $availabilityService, $pricingService): Reservation {
             $data = $request->validated();
@@ -93,6 +96,8 @@ class ReservationController extends Controller
                 ...$pricing,
             ]);
         });
+
+        $alertService->createReservationFollowUpAlert($reservation);
 
         return (new ReservationResource($reservation->load($this->relationships())))
             ->response()
@@ -175,7 +180,7 @@ class ReservationController extends Controller
      *
      * Requires permission: `reservations.confirm`.
      */
-    public function confirm(Reservation $reservation, VehicleAvailabilityService $availabilityService): ReservationResource
+    public function confirm(Reservation $reservation, VehicleAvailabilityService $availabilityService, AlertService $alertService): ReservationResource
     {
         $reservation = DB::transaction(function () use ($reservation, $availabilityService): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
@@ -195,6 +200,8 @@ class ReservationController extends Controller
 
             return $reservation;
         });
+
+        $alertService->resolveReservationFollowUpAlert($reservation);
 
         return new ReservationResource($reservation->load($this->relationships()));
     }
@@ -260,8 +267,10 @@ class ReservationController extends Controller
      *
      * Requires permission: `reservations.cancel`.
      */
-    public function cancel(Reservation $reservation): ReservationResource
+    public function cancel(Reservation $reservation, AlertService $alertService): ReservationResource
     {
+        $wasPending = $reservation->loadMissing('status')->status?->slug === 'pending';
+
         $reservation = DB::transaction(function () use ($reservation): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
             $vehicle = Vehicle::whereKey($reservation->vehicle_id)->lockForUpdate()->firstOrFail();
@@ -282,6 +291,10 @@ class ReservationController extends Controller
             return $reservation;
         });
 
+        if ($wasPending) {
+            $alertService->resolveReservationFollowUpAlert($reservation);
+        }
+
         return new ReservationResource($reservation->load($this->relationships()));
     }
 
@@ -290,7 +303,7 @@ class ReservationController extends Controller
      *
      * Requires permission: `reservations.reject`.
      */
-    public function reject(Reservation $reservation): ReservationResource
+    public function reject(Reservation $reservation, AlertService $alertService): ReservationResource
     {
         $reservation = DB::transaction(function () use ($reservation): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
@@ -304,6 +317,8 @@ class ReservationController extends Controller
             return $reservation;
         });
 
+        $alertService->resolveReservationFollowUpAlert($reservation);
+
         return new ReservationResource($reservation->load($this->relationships()));
     }
 
@@ -312,7 +327,7 @@ class ReservationController extends Controller
      *
      * Requires permission: `reservations.update`.
      */
-    public function reopen(Reservation $reservation, VehicleAvailabilityService $availabilityService): ReservationResource
+    public function reopen(Reservation $reservation, VehicleAvailabilityService $availabilityService, AlertService $alertService): ReservationResource
     {
         $reservation = DB::transaction(function () use ($reservation, $availabilityService): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
@@ -332,6 +347,8 @@ class ReservationController extends Controller
             return $reservation;
         });
 
+        $alertService->createReservationFollowUpAlert($reservation);
+
         return new ReservationResource($reservation->load($this->relationships()));
     }
 
@@ -348,15 +365,82 @@ class ReservationController extends Controller
     public function checkAvailability(ReservationAvailabilityRequest $request, VehicleAvailabilityService $availabilityService): JsonResponse
     {
         $data = $request->validated();
+        $vehicleId = (int) $data['vehicle_id'];
+        $startAt = Carbon::parse($data['start_datetime']);
+        $endAt = Carbon::parse($data['end_datetime']);
+        $ignoreReservationId = $data['ignore_reservation_id'] ?? null;
+        $durationSeconds = max($startAt->diffInSeconds($endAt), 3600);
+
+        $available = $availabilityService->checkAvailability(
+            $vehicleId,
+            $data['start_datetime'],
+            $data['end_datetime'],
+            $ignoreReservationId
+        );
+
+        $schedule = $availabilityService->vehicleSchedule(
+            $vehicleId,
+            now(),
+            now()->addDays(90),
+            $ignoreReservationId
+        );
 
         return response()->json([
-            'available' => $availabilityService->checkAvailability(
-                (int) $data['vehicle_id'],
-                $data['start_datetime'],
-                $data['end_datetime'],
-                $data['ignore_reservation_id'] ?? null
-            ),
+            'available' => $available,
+            'vehicle_rentable' => $schedule['vehicle_rentable'],
+            'vehicle_status' => $schedule['vehicle_status'],
+            'blocked_periods' => $schedule['blocked_periods'],
+            'conflicting_periods' => $available
+                ? []
+                : $availabilityService->getConflictingPeriods(
+                    $vehicleId,
+                    $data['start_datetime'],
+                    $data['end_datetime'],
+                    $ignoreReservationId
+                ),
+            'suggested_periods' => $available
+                ? []
+                : $availabilityService->suggestAvailablePeriods(
+                    $vehicleId,
+                    $durationSeconds,
+                    now(),
+                    now()->addDays(90),
+                    5,
+                    $ignoreReservationId
+                ),
         ]);
+    }
+
+    /**
+     * Return blocked reservation periods for a vehicle.
+     *
+     * Requires permission: `reservations.view`.
+     *
+     * @queryParam vehicle_id integer required Vehicle ID. Example: 1
+     * @queryParam from date optional Range start. Example: 2026-07-01
+     * @queryParam to date optional Range end. Example: 2026-09-30
+     * @queryParam ignore_reservation_id integer optional Reservation ID to ignore when editing. Example: 10
+     */
+    public function vehicleAvailability(Request $request, VehicleAvailabilityService $availabilityService): JsonResponse
+    {
+        $data = $request->validate([
+            'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after:from'],
+            'ignore_reservation_id' => ['nullable', 'integer', 'exists:reservations,id'],
+        ]);
+
+        $from = isset($data['from']) ? Carbon::parse($data['from']) : now();
+        $to = isset($data['to']) ? Carbon::parse($data['to']) : now()->addDays(90);
+
+        return response()->json(
+            $availabilityService->vehicleSchedule(
+                (int) $data['vehicle_id'],
+                $from,
+                $to,
+                $data['ignore_reservation_id'] ?? null
+            )
+        );
     }
 
     /**

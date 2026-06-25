@@ -31,6 +31,8 @@ class AlertController extends Controller
             ->latest()
             ->paginate(15);
 
+        AlertResource::prepareReservationIds($alerts->getCollection());
+
         return AlertResource::collection($alerts);
     }
 
@@ -46,6 +48,8 @@ class AlertController extends Controller
             ->where('alert_status_id', AlertStatus::where('slug', 'pending')->firstOrFail()->id)
             ->orderBy('due_date')
             ->paginate(15);
+
+        AlertResource::prepareReservationIds($alerts->getCollection());
 
         return AlertResource::collection($alerts);
     }
@@ -139,6 +143,6 @@ class AlertController extends Controller
      */
     private function relationships(): array
     {
-        return ['vehicle', 'alertType', 'alertStatus'];
+        return ['vehicle', 'reservation', 'alertType', 'alertStatus'];
     }
 }

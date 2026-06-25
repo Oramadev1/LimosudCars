@@ -19,7 +19,6 @@ return new class extends Migration
             'maintenance' => 'Maintenance',
             'repair' => 'Repair',
             'out_of_service' => 'Out of Service',
-            'sold' => 'Sold',
         ],
         'transmission_types' => [
             'manual' => 'Manual',

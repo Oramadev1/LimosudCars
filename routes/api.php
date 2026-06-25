@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AlertController;
 use App\Http\Controllers\Api\Admin\AuthController;
+use App\Http\Controllers\Api\Admin\BlogPostController;
 use App\Http\Controllers\Api\Admin\ContractController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController;
@@ -9,12 +10,16 @@ use App\Http\Controllers\Api\Admin\ExpenseController;
 use App\Http\Controllers\Api\Admin\LocationController;
 use App\Http\Controllers\Api\Admin\MaintenanceController;
 use App\Http\Controllers\Api\Admin\PaymentController;
+use App\Http\Controllers\Api\Admin\PermissionController;
 use App\Http\Controllers\Api\Admin\ReservationController;
+use App\Http\Controllers\Api\Admin\RoleController;
+use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\VehicleBrandController;
 use App\Http\Controllers\Api\Admin\VehicleCategoryController;
 use App\Http\Controllers\Api\Admin\VehicleController;
 use App\Http\Controllers\Api\Admin\VehiclePhotoController;
 use App\Http\Controllers\Api\LookupController;
+use App\Http\Controllers\Api\Public\PublicBlogPostController;
 use App\Http\Controllers\Api\Public\PublicLocationController;
 use App\Http\Controllers\Api\Public\PublicReservationController;
 use App\Http\Controllers\Api\Public\PublicVehicleController;
@@ -35,6 +40,8 @@ Route::prefix('public')->group(function (): void {
     Route::get('/vehicles/{slug}', [PublicVehicleController::class, 'show']);
     Route::post('/reservations', [PublicReservationController::class, 'store']);
     Route::post('/reservations/check-availability', [PublicReservationController::class, 'checkAvailability']);
+    Route::get('/blog-posts', [PublicBlogPostController::class, 'index']);
+    Route::get('/blog-posts/{slug}', [PublicBlogPostController::class, 'show']);
 });
 
 Route::prefix('admin')->group(function (): void {
@@ -43,10 +50,25 @@ Route::prefix('admin')->group(function (): void {
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::patch('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/lookups', [LookupController::class, 'adminIndex']);
 
     Route::get('/dashboard/statistics', [DashboardController::class, 'statistics'])->middleware('permission:dashboard.view');
+
+    Route::get('/users', [UserController::class, 'index'])->middleware('permission:users.view');
+    Route::get('/users/{user}', [UserController::class, 'show'])->middleware('permission:users.view');
+    Route::patch('/users/{user}', [UserController::class, 'update'])->middleware('permission:users.update');
+    Route::put('/users/{user}', [UserController::class, 'update'])->middleware('permission:users.update');
+    Route::patch('/users/{user}/permissions', [UserController::class, 'syncPermissions'])->middleware('permission:permissions.assign');
+
+    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:roles.view');
+    Route::get('/roles/{role}', [RoleController::class, 'show'])->middleware('permission:roles.view');
+    Route::patch('/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->middleware('permission:permissions.assign');
+
+    Route::get('/permissions', [PermissionController::class, 'index'])->middleware('permission:permissions.view');
+
     Route::get('/dashboard/revenue', [DashboardController::class, 'revenue'])->middleware('permission:dashboard.view');
     Route::get('/dashboard/expenses', [DashboardController::class, 'expenses'])->middleware('permission:dashboard.view');
 
@@ -97,6 +119,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function (): void {
     Route::get('/reservations', [ReservationController::class, 'index'])->middleware('permission:reservations.view');
     Route::post('/reservations', [ReservationController::class, 'store'])->middleware('permission:reservations.create');
     Route::post('/reservations/check-availability', [ReservationController::class, 'checkAvailability'])->middleware('permission:reservations.view');
+    Route::get('/reservations/vehicle-availability', [ReservationController::class, 'vehicleAvailability'])->middleware('permission:reservations.view');
     Route::get('/reservations-calendar', [ReservationController::class, 'calendar'])->middleware('permission:reservations.view');
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show'])->middleware('permission:reservations.view');
     Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->middleware('permission:reservations.update');
@@ -147,4 +170,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function (): void {
     Route::patch('/alerts/{alert}/seen', [AlertController::class, 'seen'])->middleware('permission:alerts.update');
     Route::patch('/alerts/{alert}/done', [AlertController::class, 'done'])->middleware('permission:alerts.update');
     Route::patch('/alerts/{alert}/ignore', [AlertController::class, 'ignore'])->middleware('permission:alerts.update');
+
+    Route::get('/blog-posts', [BlogPostController::class, 'index'])->middleware('permission:site_pages.view');
+    Route::post('/blog-posts', [BlogPostController::class, 'store'])->middleware('permission:site_pages.create');
+    Route::get('/blog-posts/{blogPost}', [BlogPostController::class, 'show'])->middleware('permission:site_pages.view');
+    Route::patch('/blog-posts/{blogPost}', [BlogPostController::class, 'update'])->middleware('permission:site_pages.update');
+    Route::put('/blog-posts/{blogPost}', [BlogPostController::class, 'update'])->middleware('permission:site_pages.update');
+    Route::delete('/blog-posts/{blogPost}', [BlogPostController::class, 'destroy'])->middleware('permission:site_pages.delete');
 });

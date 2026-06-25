@@ -72,7 +72,7 @@ class Reservation extends Model
      */
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     /**
@@ -80,7 +80,7 @@ class Reservation extends Model
      */
     public function vehicle(): BelongsTo
     {
-        return $this->belongsTo(Vehicle::class);
+        return $this->belongsTo(Vehicle::class)->withTrashed();
     }
 
     /**
@@ -112,7 +112,7 @@ class Reservation extends Model
      */
     public function pickupLocation(): BelongsTo
     {
-        return $this->belongsTo(Location::class, 'pickup_location_id');
+        return $this->belongsTo(Location::class, 'pickup_location_id')->withTrashed();
     }
 
     /**
@@ -120,7 +120,7 @@ class Reservation extends Model
      */
     public function dropoffLocation(): BelongsTo
     {
-        return $this->belongsTo(Location::class, 'dropoff_location_id');
+        return $this->belongsTo(Location::class, 'dropoff_location_id')->withTrashed();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -34,11 +35,47 @@ class UserResource extends JsonResource
                     ->values()
                     ->all();
             }),
-            'permissions' => $this->whenLoaded('roles', function (): array {
-                return $this->roles
-                    ->flatMap(fn ($role) => $role->permissions)
-                    ->unique('slug')
-                    ->sortBy('slug')
+            'permissions' => $this->when(
+                $this->relationLoaded('roles') || $this->relationLoaded('permissions'),
+                function (): array {
+                    if ($this->isSuperAdmin()) {
+                        return Permission::query()
+                            ->orderBy('slug')
+                            ->get()
+                            ->map(fn ($permission): array => [
+                                'id' => $permission->id,
+                                'module' => $permission->module,
+                                'name' => $permission->name,
+                                'slug' => $permission->slug,
+                            ])
+                            ->values()
+                            ->all();
+                    }
+
+                    $fromRoles = $this->relationLoaded('roles')
+                        ? $this->roles->flatMap(fn ($role) => $role->permissions)
+                        : collect();
+
+                    $direct = $this->relationLoaded('permissions')
+                        ? $this->permissions
+                        : collect();
+
+                    return $fromRoles
+                        ->merge($direct)
+                        ->unique('slug')
+                        ->sortBy('slug')
+                        ->map(fn ($permission): array => [
+                            'id' => $permission->id,
+                            'module' => $permission->module,
+                            'name' => $permission->name,
+                            'slug' => $permission->slug,
+                        ])
+                        ->values()
+                        ->all();
+                },
+            ),
+            'direct_permissions' => $this->whenLoaded('permissions', function (): array {
+                return $this->permissions
                     ->map(fn ($permission): array => [
                         'id' => $permission->id,
                         'module' => $permission->module,
