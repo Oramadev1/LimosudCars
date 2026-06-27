@@ -31,7 +31,7 @@ return [
         'https://admin.limosudcars.com',
         'https://portal-9x.limosudcars.com',
         'https://limosud-cars-admin.vercel.app',
-        'https://limosud-cars-frontend.vercel.app',
+        'https://limosud-frontend.vercel.app',
     ], array_filter(explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))))),
 
     'allowed_origins_patterns' => [
