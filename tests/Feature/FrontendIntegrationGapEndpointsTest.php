@@ -53,6 +53,16 @@ class FrontendIntegrationGapEndpointsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('vehicle_id', $activeVehicle->id)
             ->assertJsonPath('available', true);
+
+        $this->getJson("/api/public/vehicles/{$activeVehicle->id}/schedule")
+            ->assertOk()
+            ->assertJsonPath('vehicle_id', $activeVehicle->id)
+            ->assertJsonStructure([
+                'vehicle_id',
+                'vehicle_rentable',
+                'vehicle_status',
+                'blocked_periods',
+            ]);
     }
 
     public function test_public_and_admin_lookup_endpoints_return_expected_data(): void

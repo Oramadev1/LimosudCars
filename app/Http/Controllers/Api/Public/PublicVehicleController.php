@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\VehicleResource;
 use App\Models\Vehicle;
 use App\Services\VehicleAvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -74,6 +75,31 @@ class PublicVehicleController extends Controller
                 $data['end_datetime']
             ),
         ]);
+    }
+
+    /**
+     * Return blocked rental periods for calendar date picking.
+     *
+     * @unauthenticated
+     *
+     * @queryParam from date optional Range start. Example: 2026-07-01
+     * @queryParam to date optional Range end. Example: 2026-09-30
+     */
+    public function schedule(Request $request, Vehicle $vehicle, VehicleAvailabilityService $availabilityService): JsonResponse
+    {
+        abort_unless($vehicle->is_active, 404);
+
+        $data = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after:from'],
+        ]);
+
+        $from = isset($data['from']) ? Carbon::parse($data['from']) : now();
+        $to = isset($data['to']) ? Carbon::parse($data['to']) : now()->addDays(120);
+
+        return response()->json(
+            $availabilityService->vehicleSchedule($vehicle->id, $from, $to)
+        );
     }
 
     /**

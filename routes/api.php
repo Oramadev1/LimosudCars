@@ -37,6 +37,7 @@ Route::prefix('public')->group(function (): void {
     Route::get('/locations', [PublicLocationController::class, 'index']);
     Route::get('/vehicles', [PublicVehicleController::class, 'index']);
     Route::get('/vehicles/{vehicle}/availability', [PublicVehicleController::class, 'availability']);
+    Route::get('/vehicles/{vehicle}/schedule', [PublicVehicleController::class, 'schedule']);
     Route::get('/vehicles/{slug}', [PublicVehicleController::class, 'show']);
     Route::post('/reservations', [PublicReservationController::class, 'store']);
     Route::post('/reservations/check-availability', [PublicReservationController::class, 'checkAvailability']);

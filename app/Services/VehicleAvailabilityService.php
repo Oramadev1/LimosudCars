@@ -253,7 +253,7 @@ class VehicleAvailabilityService
             return true;
         }
 
-        return in_array($slug, ['available', 'reserved'], true);
+        return in_array($slug, ['available', 'reserved', 'rented'], true);
     }
 
     private function hasOverlappingReservations(
