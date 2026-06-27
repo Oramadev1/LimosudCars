@@ -48,7 +48,7 @@ Route::prefix('admin')->group(function (): void {
     Route::post('/auth/login', [AuthController::class, 'login']);
 });
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function (): void {
+Route::middleware('auth:api')->prefix('admin')->group(function (): void {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::patch('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);

@@ -7,20 +7,21 @@ use App\Http\Requests\Admin\LoginRequest;
 use App\Http\Requests\Admin\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\AdminAuthCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 /**
  * @group Admin Auth
  *
- * Endpoints for issuing and revoking Laravel Sanctum admin API tokens.
+ * JWT authentication for the admin panel. The token is issued as an HttpOnly cookie.
  */
 class AuthController extends Controller
 {
     /**
-     * Authenticate an admin user and issue a Sanctum token.
+     * Authenticate an admin user and set an HttpOnly JWT cookie.
      *
      * @unauthenticated
      *
@@ -33,15 +34,18 @@ class AuthController extends Controller
     {
         $credentials = $request->validated();
 
-        $user = User::where('email', $credentials['email'])->first();
-
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        if (! $token = Auth::guard('api')->attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
         }
 
+        /** @var User $user */
+        $user = Auth::guard('api')->user();
+
         if (! $user->is_active) {
+            Auth::guard('api')->logout();
+
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
             ]);
@@ -49,17 +53,15 @@ class AuthController extends Controller
 
         $user->load('roles.permissions');
 
-        return response()->json([
-            'token_type' => 'Bearer',
-            'access_token' => $user->createToken('admin-api')->plainTextToken,
-            'user' => new UserResource($user),
-        ]);
+        return response()
+            ->json([
+                'user' => new UserResource($user),
+            ])
+            ->withCookie(AdminAuthCookie::attach($token));
     }
 
     /**
      * Return the authenticated admin user with roles and permissions.
-     *
-     * Send a Sanctum bearer token in the Authorization header.
      */
     public function me(Request $request): UserResource
     {
@@ -71,8 +73,6 @@ class AuthController extends Controller
 
     /**
      * Update the authenticated admin user's profile.
-     *
-     * Send a Sanctum bearer token in the Authorization header.
      */
     public function updateProfile(UpdateProfileRequest $request): UserResource
     {
@@ -93,16 +93,16 @@ class AuthController extends Controller
     }
 
     /**
-     * Revoke the current Sanctum token.
-     *
-     * Send a Sanctum bearer token in the Authorization header.
+     * Invalidate the current JWT and clear the auth cookie.
      */
     public function logout(Request $request): JsonResponse
     {
-        $request->user()?->currentAccessToken()?->delete();
+        Auth::guard('api')->logout();
 
-        return response()->json([
-            'message' => 'Logged out successfully.',
-        ]);
+        return response()
+            ->json([
+                'message' => 'Logged out successfully.',
+            ])
+            ->withCookie(AdminAuthCookie::forget());
     }
 }

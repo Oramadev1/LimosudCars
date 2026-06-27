@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->encryptCookies(except: [
+            'limosud_admin_token',
+        ]);
+
         $middleware->alias([
             'permission' => EnsureUserHasPermission::class,
         ]);
