@@ -29,12 +29,7 @@ Frontend developers can then open:
 http://127.0.0.1:8000/docs
 ```
 
-Admin endpoints use Laravel Sanctum bearer tokens. First call `POST /api/admin/auth/login`, then send the returned token on protected admin requests:
-
-```txt
-Authorization: Bearer {SANCTUM_TOKEN}
-Accept: application/json
-```
+Admin endpoints use a JWT in an HttpOnly cookie. Call `POST /api/admin/auth/login`; the browser stores the cookie and sends it on protected admin requests (`credentials: include` from the admin SPA).
 
 Public endpoints under `/api/public/*` do not require authentication.
 

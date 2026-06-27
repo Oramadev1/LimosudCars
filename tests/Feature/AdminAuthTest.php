@@ -38,11 +38,11 @@ class AdminAuthTest extends TestCase
                 ],
             ])
             ->assertJsonPath('user.email', 'admin@limosudcars.local')
-            ->assertCookie(AdminAuthCookie::NAME);
+            ->assertCookie(AdminAuthCookie::name());
 
-        $token = (string) $loginResponse->getCookie(AdminAuthCookie::NAME, false)->getValue();
+        $token = (string) $loginResponse->getCookie(AdminAuthCookie::name(), false)->getValue();
 
-        $this->withUnencryptedCookie(AdminAuthCookie::NAME, $token)
+        $this->withUnencryptedCookie(AdminAuthCookie::name(), $token)
             ->getJson('/api/admin/auth/me')
             ->assertOk()
             ->assertJsonPath('data.email', 'admin@limosudcars.local')

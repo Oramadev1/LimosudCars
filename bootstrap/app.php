@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: [
-            'limosud_admin_token',
+            env('JWT_COOKIE_NAME', 'limosud_admin_token'),
         ]);
 
         $middleware->alias([

@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * @group Admin Auth
  *
- * JWT authentication for the admin panel. The token is issued as an HttpOnly cookie.
+ * JWT in an HttpOnly cookie (not Sanctum bearer tokens).
  */
 class AuthController extends Controller
 {
@@ -25,14 +25,11 @@ class AuthController extends Controller
      *
      * @unauthenticated
      *
-     * @bodyParam email string required Admin email address. Example: admin@limosudcars.local
-     * @bodyParam password string required Admin password. Example: password
-     *
      * @throws ValidationException
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->validated();
+        $credentials = $request->only('email', 'password');
 
         if (! $token = Auth::guard('api')->attempt($credentials)) {
             throw ValidationException::withMessages([
@@ -53,16 +50,17 @@ class AuthController extends Controller
 
         $user->load('roles.permissions');
 
+        $ttlMinutes = (int) config('jwt.ttl', 1440);
+
         return response()
             ->json([
+                'message' => 'Login successful',
+                'expires_in_minutes' => $ttlMinutes,
                 'user' => new UserResource($user),
             ])
             ->withCookie(AdminAuthCookie::attach($token));
     }
 
-    /**
-     * Return the authenticated admin user with roles and permissions.
-     */
     public function me(Request $request): UserResource
     {
         /** @var User $user */
@@ -71,9 +69,6 @@ class AuthController extends Controller
         return new UserResource($user->load(['roles.permissions', 'permissions']));
     }
 
-    /**
-     * Update the authenticated admin user's profile.
-     */
     public function updateProfile(UpdateProfileRequest $request): UserResource
     {
         /** @var User $user */
@@ -92,9 +87,6 @@ class AuthController extends Controller
         return new UserResource($user->load(['roles.permissions', 'permissions']));
     }
 
-    /**
-     * Invalidate the current JWT and clear the auth cookie.
-     */
     public function logout(Request $request): JsonResponse
     {
         Auth::guard('api')->logout();

@@ -20,13 +20,13 @@ trait AuthenticatesAdmin
 
         $response->assertOk();
 
-        return (string) $response->getCookie(AdminAuthCookie::NAME, false)->getValue();
+        return (string) $response->getCookie(AdminAuthCookie::name(), false)->getValue();
     }
 
     protected function withAdminAuth(): static
     {
         $token = $this->adminToken();
 
-        return $this->withUnencryptedCookie(AdminAuthCookie::NAME, $token);
+        return $this->withUnencryptedCookie(AdminAuthCookie::name(), $token);
     }
 }
