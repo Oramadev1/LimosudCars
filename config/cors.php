@@ -29,10 +29,13 @@ return [
         'https://limosudcars.com',
         'https://www.limosudcars.com',
         'https://admin.limosudcars.com',
+        'https://portal-9x.limosudcars.com',
         'https://limosud-cars-admin.vercel.app',
+        'https://limosud-cars-frontend.vercel.app',
     ], array_filter(explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))))),
 
     'allowed_origins_patterns' => [
+        '/^https:\/\/portal-[\w-]+\.limosudcars\.com$/',
         '/^https:\/\/limosud-cars[\w-]*\.vercel\.app$/',
         '/^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:(3000|3001)$/',
     ],
@@ -41,8 +44,8 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
