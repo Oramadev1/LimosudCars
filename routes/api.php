@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Admin\AlertController;
 use App\Http\Controllers\Api\Admin\AuthController;
 use App\Http\Controllers\Api\Admin\BlogPostController;
+use App\Http\Controllers\Api\Admin\ContactMessageController;
 use App\Http\Controllers\Api\Admin\ContractController;
 use App\Http\Controllers\Api\Admin\CustomerController;
 use App\Http\Controllers\Api\Admin\DashboardController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Api\Admin\VehicleController;
 use App\Http\Controllers\Api\Admin\VehiclePhotoController;
 use App\Http\Controllers\Api\LookupController;
 use App\Http\Controllers\Api\Public\PublicBlogPostController;
+use App\Http\Controllers\Api\Public\PublicContactMessageController;
 use App\Http\Controllers\Api\Public\PublicLocationController;
 use App\Http\Controllers\Api\Public\PublicReservationController;
 use App\Http\Controllers\Api\Public\PublicVehicleController;
@@ -41,6 +43,7 @@ Route::prefix('public')->group(function (): void {
     Route::get('/vehicles/{slug}', [PublicVehicleController::class, 'show']);
     Route::post('/reservations', [PublicReservationController::class, 'store']);
     Route::post('/reservations/check-availability', [PublicReservationController::class, 'checkAvailability']);
+    Route::post('/contact-messages', [PublicContactMessageController::class, 'store']);
     Route::get('/blog-posts', [PublicBlogPostController::class, 'index']);
     Route::get('/blog-posts/{slug}', [PublicBlogPostController::class, 'show']);
 });
@@ -171,6 +174,11 @@ Route::middleware('auth:api')->prefix('admin')->group(function (): void {
     Route::patch('/alerts/{alert}/seen', [AlertController::class, 'seen'])->middleware('permission:alerts.update');
     Route::patch('/alerts/{alert}/done', [AlertController::class, 'done'])->middleware('permission:alerts.update');
     Route::patch('/alerts/{alert}/ignore', [AlertController::class, 'ignore'])->middleware('permission:alerts.update');
+
+    Route::get('/contact-messages', [ContactMessageController::class, 'index'])->middleware('permission:contact_messages.view');
+    Route::get('/contact-messages/{contactMessage}', [ContactMessageController::class, 'show'])->middleware('permission:contact_messages.view');
+    Route::patch('/contact-messages/{contactMessage}/read', [ContactMessageController::class, 'markRead'])->middleware('permission:contact_messages.update');
+    Route::delete('/contact-messages/{contactMessage}', [ContactMessageController::class, 'destroy'])->middleware('permission:contact_messages.delete');
 
     Route::get('/blog-posts', [BlogPostController::class, 'index'])->middleware('permission:site_pages.view');
     Route::post('/blog-posts', [BlogPostController::class, 'store'])->middleware('permission:site_pages.create');

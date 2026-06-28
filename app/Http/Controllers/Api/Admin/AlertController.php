@@ -143,6 +143,6 @@ class AlertController extends Controller
      */
     private function relationships(): array
     {
-        return ['vehicle', 'reservation', 'alertType', 'alertStatus'];
+        return ['vehicle', 'reservation', 'contactMessage', 'alertType', 'alertStatus'];
     }
 }

@@ -68,6 +68,9 @@ class RolePermissionSeeder extends Seeder
             'alerts.create',
             'alerts.update',
             'alerts.close',
+            'contact_messages.view',
+            'contact_messages.update',
+            'contact_messages.delete',
             'site_pages.view',
             'site_pages.create',
             'site_pages.update',
@@ -98,6 +101,8 @@ class RolePermissionSeeder extends Seeder
             'alerts.view',
             'alerts.update',
             'alerts.close',
+            'contact_messages.view',
+            'contact_messages.update',
         ]);
 
         $this->syncRolePermissions('accountant', [

@@ -57,9 +57,15 @@ class AlertResource extends JsonResource
                 'plate_number' => $this->vehicle->plate_number,
             ] : null),
             'reservation_id' => $this->resolvedReservationId(),
+            'contact_message_id' => $this->contact_message_id,
             'reservation' => $this->whenLoaded('reservation', fn (): ?array => $this->reservation ? [
                 'id' => $this->reservation->id,
                 'reservation_number' => $this->reservation->reservation_number,
+            ] : null),
+            'contact_message' => $this->whenLoaded('contactMessage', fn (): ?array => $this->contactMessage ? [
+                'id' => $this->contactMessage->id,
+                'name' => $this->contactMessage->name,
+                'email' => $this->contactMessage->email,
             ] : null),
             'alert_type' => $this->whenLoaded('alertType', fn (): array => [
                 'id' => $this->alertType->id,

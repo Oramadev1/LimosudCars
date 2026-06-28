@@ -21,6 +21,7 @@ class AlertTypeSeeder extends Seeder
             'insurance_expiry' => 'Insurance Expiry',
             'payment_due' => 'Payment Due',
             'reservation_follow_up' => 'Reservation Follow Up',
+            'website_contact' => 'Website Contact',
             'vehicle_status' => 'Vehicle Status',
             'other' => 'Other',
         ]);
