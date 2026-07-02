@@ -178,6 +178,10 @@ class MaintenanceController extends Controller
             }
         }
 
+        if (array_key_exists('cost', $prepared) && $prepared['cost'] === null) {
+            $prepared['cost'] = 0;
+        }
+
         if (array_key_exists('maintenance_type_slug', $data)) {
             $typeId = MaintenanceType::where('slug', $data['maintenance_type_slug'])->value('id');
 

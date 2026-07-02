@@ -56,6 +56,28 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_maintenance_without_cost(): void
+    {
+        $this->seed();
+        $token = $this->adminToken();
+        $vehicle = $this->vehicle();
+
+        $this->withToken($token)
+            ->postJson('/api/admin/maintenances', [
+                'vehicle_id' => $vehicle->id,
+                'maintenance_type_slug' => 'oil_change',
+                'maintenance_date' => now()->toDateString(),
+                'cost' => null,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.cost', '0.00');
+
+        $this->assertDatabaseHas('vehicle_maintenances', [
+            'vehicle_id' => $vehicle->id,
+            'cost' => 0,
+        ]);
+    }
+
     public function test_upcoming_maintenance_endpoint_lists_future_next_maintenance_dates(): void
     {
         $this->seed();
