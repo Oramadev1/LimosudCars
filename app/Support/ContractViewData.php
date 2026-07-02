@@ -131,8 +131,6 @@ class ContractViewData
             'insuranceType' => $details['insurance']['type'] ?? 'basic',
             'leaveUrbanArea' => (bool) ($details['special_authorization']['leave_urban_area'] ?? false),
             'pricePerDay' => number_format((float) $reservation->price_per_day, 0, '.', ' '),
-            'pricePerWeek' => number_format((float) $vehicle->weekly_price, 0, '.', ' '),
-            'pricePerMonth' => number_format((float) $vehicle->monthly_price, 0, '.', ' '),
             'depositAmount' => number_format((float) $reservation->deposit_amount, 0, '.', ' '),
             'deliveryFee' => number_format((float) $reservation->delivery_fee, 0, '.', ' '),
             'discount' => number_format((float) ($paymentExtras['discount'] ?? 0), 0, '.', ' '),

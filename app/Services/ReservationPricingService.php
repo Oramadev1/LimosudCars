@@ -17,7 +17,7 @@ class ReservationPricingService
     public function calculate(Vehicle $vehicle, Location $pickupLocation, Location $dropoffLocation, mixed $startDatetime, mixed $endDatetime): array
     {
         $totalDays = $this->calculateTotalDays($startDatetime, $endDatetime);
-        $pricePerDay = $this->pricePerDay($vehicle, $totalDays);
+        $pricePerDay = $this->pricePerDay($vehicle);
         $deliveryFee = (float) $pickupLocation->delivery_fee + (float) $dropoffLocation->delivery_fee;
         $depositAmount = (float) $vehicle->deposit_amount;
 
@@ -42,16 +42,8 @@ class ReservationPricingService
         return max(1, (int) ceil($startAt->diffInSeconds($endAt) / 86400));
     }
 
-    private function pricePerDay(Vehicle $vehicle, int $totalDays): float
+    private function pricePerDay(Vehicle $vehicle): float
     {
-        if ($totalDays >= 30 && (float) $vehicle->monthly_price > 0) {
-            return (float) $vehicle->monthly_price / 30;
-        }
-
-        if ($totalDays >= 7 && (float) $vehicle->weekly_price > 0) {
-            return (float) $vehicle->weekly_price / 7;
-        }
-
         return (float) $vehicle->daily_price;
     }
 }

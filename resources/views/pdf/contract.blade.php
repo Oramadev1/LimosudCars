@@ -261,7 +261,7 @@
                 </tr>
                 <tr>
                     <td colspan="5" class="cell tiny" style="border-top:0;">
-                        Durée: {{ $rentalDurationDays }} j · Semaine: {{ $pricePerWeek }} · Mois: {{ $pricePerMonth }}
+                        Durée: {{ $rentalDurationDays }} jour(s)
                     </td>
                 </tr>
                 <tr>

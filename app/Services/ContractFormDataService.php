@@ -65,8 +65,6 @@ class ContractFormDataService
                     'transmission' => $vehicle->transmissionType?->name,
                     'fuel_type' => $vehicle->fuelType?->name,
                     'daily_price' => (float) $reservation->price_per_day,
-                    'weekly_price' => (float) $vehicle->weekly_price,
-                    'monthly_price' => (float) $vehicle->monthly_price,
                 ],
                 'rental' => [
                     'pickup_location' => $reservation->pickupLocation?->name,
