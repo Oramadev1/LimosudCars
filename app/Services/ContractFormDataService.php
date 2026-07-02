@@ -48,6 +48,7 @@ class ContractFormDataService
                 'contract_series' => $contract?->contract_series ?? 'A',
                 'generation_date' => now()->toDateString(),
                 'customer' => [
+                    'id' => $reservation->customer->id,
                     'full_name' => $reservation->customer->full_name,
                     'nationality' => $reservation->customer->nationality,
                     'phone' => $reservation->customer->phone,

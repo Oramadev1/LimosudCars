@@ -98,6 +98,8 @@ class ContractDetails
 
         return [
             'customer' => [
+                'passport_or_cin' => $customer->passport_or_cin,
+                'driving_license_number' => $customer->driving_license_number,
                 'address' => $customer->address,
                 'foreign_address' => $customer->foreign_address,
                 'license_issued_at' => self::formatDate($customer->driving_license_issued_at),
@@ -174,20 +176,21 @@ class ContractDetails
     {
         $missing = [];
         $customer = $reservation->customer;
+        $customerDetails = $details['customer'] ?? [];
 
-        if (! $customer->passport_or_cin) {
+        if (blank($customerDetails['passport_or_cin'] ?? null) && blank($customer->passport_or_cin)) {
             $missing[] = 'customer.passport_or_cin';
         }
 
-        if (blank($details['customer']['address'] ?? null) && blank($customer->address)) {
+        if (blank($customerDetails['address'] ?? null) && blank($customer->address)) {
             $missing[] = 'customer.address';
         }
 
-        if (blank($customer->driving_license_number)) {
+        if (blank($customerDetails['driving_license_number'] ?? null) && blank($customer->driving_license_number)) {
             $missing[] = 'customer.driving_license_number';
         }
 
-        if (blank($details['customer']['license_issued_at'] ?? null) && blank($customer->driving_license_issued_at)) {
+        if (blank($customerDetails['license_issued_at'] ?? null) && blank($customer->driving_license_issued_at)) {
             $missing[] = 'customer.license_issued_at';
         }
 
@@ -204,6 +207,8 @@ class ContractDetails
 
         if ($details['persist_customer'] ?? true) {
             $reservation->customer->fill(array_filter([
+                'passport_or_cin' => $customerData['passport_or_cin'] ?? null,
+                'driving_license_number' => $customerData['driving_license_number'] ?? null,
                 'address' => $customerData['address'] ?? null,
                 'foreign_address' => $customerData['foreign_address'] ?? null,
                 'driving_license_issued_at' => self::parseDate($customerData['license_issued_at'] ?? null),

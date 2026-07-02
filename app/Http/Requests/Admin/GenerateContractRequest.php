@@ -22,6 +22,8 @@ class GenerateContractRequest extends FormRequest
             'contract_series' => ['nullable', 'string', 'max:8'],
             'details' => ['nullable', 'array'],
             'details.customer' => ['nullable', 'array'],
+            'details.customer.passport_or_cin' => ['nullable', 'string', 'max:255'],
+            'details.customer.driving_license_number' => ['nullable', 'string', 'max:255'],
             'details.customer.address' => ['nullable', 'string', 'max:255'],
             'details.customer.foreign_address' => ['nullable', 'string', 'max:255'],
             'details.customer.license_issued_at' => ['nullable', 'date'],
