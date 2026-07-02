@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\ContractPaymentMethods;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -58,8 +59,9 @@ class GenerateContractRequest extends FormRequest
             'details.payment.damage_charges' => ['nullable', 'numeric', 'min:0'],
             'details.payment.tax' => ['nullable', 'numeric', 'min:0'],
             'details.payment.scheduled_payment_date' => ['nullable', 'date'],
+            'details.payment.payment_method_slug' => ['nullable', 'string', Rule::in(ContractPaymentMethods::slugs())],
             'details.insurance' => ['nullable', 'array'],
-            'details.insurance.type' => ['nullable', Rule::in(['basic', 'premium', 'full_coverage'])],
+            'details.insurance.type' => ['nullable', Rule::in(['basic', 'premium'])],
             'details.insurance.deductible' => ['nullable', 'integer', 'min:0'],
             'details.special_authorization' => ['nullable', 'array'],
             'details.special_authorization.leave_urban_area' => ['nullable', 'boolean'],

@@ -47,7 +47,9 @@ class ContractViewData
             ->sortByDesc(fn ($payment) => $payment->payment_date?->format('Y-m-d H:i:s') ?? '')
             ->first();
 
-        $paymentMethodSlug = $latestPayment?->paymentMethod?->slug;
+        $paymentMethodSlug = ContractPaymentMethods::normalize(
+            $details['payment']['payment_method_slug'] ?? $latestPayment?->paymentMethod?->slug,
+        );
         $brandName = trim(($vehicle->brand?->name ?? '').' '.($vehicle->model ?? ''));
         if ($brandName === '') {
             $brandName = $vehicle->name;
@@ -126,7 +128,7 @@ class ContractViewData
             'documents' => $details['documents'],
             'extension' => $details['rental']['extension'] ?? '',
             'extensionTotal' => $details['rental']['extension_total'] ?? '',
-            'insuranceType' => $details['insurance']['type'] ?? 'basic',
+            'insuranceType' => ContractPaymentMethods::normalizeInsuranceType($details['insurance']['type'] ?? 'basic'),
             'leaveUrbanArea' => (bool) ($details['special_authorization']['leave_urban_area'] ?? false),
             'pricePerDay' => number_format((float) $reservation->price_per_day, 0, '.', ' '),
             'depositAmount' => number_format((float) $reservation->deposit_amount, 0, '.', ' '),

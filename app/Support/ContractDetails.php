@@ -81,10 +81,26 @@ class ContractDetails
         ]);
 
         if ($contract?->details) {
-            return self::merge(self::blank($reservation), $contract->details);
+            return self::finalize(self::merge(self::blank($reservation), $contract->details));
         }
 
-        return self::blank($reservation);
+        return self::finalize(self::blank($reservation));
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     * @return array<string, mixed>
+     */
+    private static function finalize(array $details): array
+    {
+        $details['payment']['payment_method_slug'] = ContractPaymentMethods::normalize(
+            $details['payment']['payment_method_slug'] ?? null,
+        );
+        $details['insurance']['type'] = ContractPaymentMethods::normalizeInsuranceType(
+            $details['insurance']['type'] ?? null,
+        );
+
+        return $details;
     }
 
     /**
@@ -95,6 +111,9 @@ class ContractDetails
         $customer = $reservation->customer;
         $vehicle = $reservation->vehicle;
         $settings = \App\Models\ContractSetting::current();
+        $latestPayment = $reservation->payments
+            ->sortByDesc(fn ($payment) => $payment->payment_date?->format('Y-m-d H:i:s') ?? '')
+            ->first();
 
         return [
             'customer' => [
@@ -145,6 +164,9 @@ class ContractDetails
                 'damage_charges' => 0,
                 'tax' => 0,
                 'scheduled_payment_date' => '',
+                'payment_method_slug' => ContractPaymentMethods::normalize(
+                    $latestPayment?->paymentMethod?->slug,
+                ),
             ],
             'insurance' => [
                 'type' => 'basic',

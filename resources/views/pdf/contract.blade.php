@@ -19,7 +19,7 @@
         .legal-ar { direction: rtl; font-family: scheherazade, dejavusans, sans-serif; margin-bottom: 4px; text-align: justify; unicode-bidi: embed; }
         .car-panel { border: 1px solid #000; height: 34px; margin-bottom: 2px; text-align: center; font-size: 6pt; padding: 2px; }
         .car-panel-title { font-size: 6pt; font-weight: bold; }
-        .vehicle-condition-image { display: block; height: auto; width: 100%; }
+        .vehicle-condition-image { display: block; height: auto; margin: 0 auto; max-height: 95px; max-width: 72%; width: auto; }
         .paper-item { font-size: 6.5pt; line-height: 1.5; text-align: center; }
         .header-title { font-size: 14pt; font-weight: bold; }
         .header-sub { font-size: 8pt; font-weight: bold; }
@@ -30,10 +30,9 @@
 @php
     $ar = $labelsAr;
     $box = static fn (bool $checked = false): string => $checked ? '[X]' : '[ ]';
-    $isCash = in_array($paymentMethodSlug, ['cash', 'check'], true);
+    $isCash = $paymentMethodSlug === 'cash';
     $isTransfer = $paymentMethodSlug === 'bank_transfer';
-    $isCard = in_array($paymentMethodSlug, ['credit_card', 'debit_card', 'online'], true);
-    $isOnline = $paymentMethodSlug === 'online';
+    $isCard = $paymentMethodSlug === 'credit_card';
     $valueOrLine = static fn (?string $value): string => filled($value) ? e($value) : '<div class="value-line"></div>';
     $driver = $additionalDriver;
 @endphp
@@ -379,7 +378,6 @@
                     <td colspan="2" class="cell" style="border-top:0;">
                         <span class="mark">{{ $box($insuranceType === 'basic') }} Basic</span>
                         <span class="mark" style="margin-left:12px;">{{ $box($insuranceType === 'premium') }} Premium</span>
-                        <span class="mark" style="margin-left:12px;">{{ $box($insuranceType === 'full_coverage') }} Full</span>
                         <div class="tiny" style="margin-top:2px;">Franchise: {{ $deductibleFormatted }} MAD</div>
                     </td>
                 </tr>
@@ -391,9 +389,24 @@
                 <tr>
                     <td colspan="2" class="cell tiny" style="border-top:0;">
                         <span class="mark">{{ $box($isCash) }} Espèce</span>
-                        <span class="mark" style="margin-left:4px;">{{ $box($isTransfer) }} Virement</span>
-                        <span class="mark" style="margin-left:4px;">{{ $box($isCard) }} Carte</span>
-                        <span class="mark" style="margin-left:4px;">{{ $box($isOnline) }} Online</span>
+                        <span class="mark" style="margin-left:8px;">{{ $box($isTransfer) }} Virement</span>
+                        <span class="mark" style="margin-left:8px;">{{ $box($isCard) }} Carte crédit</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="cell" style="border-top:0;">
+                        <div class="fr-label">Avance</div>
+                        <div class="value">{{ $paidAmountFormatted }}</div>
+                    </td>
+                    <td class="cell" style="border-top:0; border-left:0;">
+                        <div class="fr-label">Reste</div>
+                        <div class="value">{{ $remainingAmountFormatted }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="cell" style="border-top:0;">
+                        <div class="fr-label">Date de paiement programmé</div>
+                        <div class="value">{{ $scheduledPaymentDate ?: ' ' }}</div>
                     </td>
                 </tr>
                 <tr>
@@ -420,22 +433,6 @@
                     <td class="cell" style="border-top:0; border-left:0;">
                         <div class="fr-label">Taxe</div>
                         <div class="value">{{ $taxAmount }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell" style="border-top:0;">
-                        <div class="fr-label">Avance</div>
-                        <div class="value">{{ $paidAmountFormatted }}</div>
-                    </td>
-                    <td class="cell" style="border-top:0; border-left:0;">
-                        <div class="fr-label">Reste ({{ $paymentStatus }})</div>
-                        <div class="value">{{ $remainingAmountFormatted }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="cell tiny" style="border-top:0;">
-                        <div class="fr-label">Date de paiement programmé</div>
-                        <div class="value">{{ $scheduledPaymentDate ?: ' ' }}</div>
                     </td>
                 </tr>
             </table>
