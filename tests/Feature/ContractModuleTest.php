@@ -272,6 +272,19 @@ class ContractModuleTest extends TestCase
         $this->assertSame('B', $contract->contract_series);
         $this->assertSame('Hay Al Qods N10', $contract->details['customer']['address']);
         $this->assertTrue($contract->details['equipment']['jack']);
+
+        $reservation->loadMissing(['customer', 'vehicle.brand', 'vehicle.category', 'pickupLocation', 'dropoffLocation', 'payments.paymentMethod']);
+        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
+            $reservation,
+            $contract->contract_number,
+            0,
+            1500,
+            null,
+            $contract->details,
+            $contract->contract_series,
+        ))->render();
+
+        $this->assertStringContainsString('Hay Al Qods N10', $html);
     }
 
     private function reservation(string $statusSlug): Reservation

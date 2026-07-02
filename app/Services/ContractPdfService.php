@@ -80,6 +80,19 @@ class ContractPdfService
 
             ContractDetails::persistRelatedRecords($reservation, $details);
 
+            $reservation->load([
+                'customer',
+                'vehicle.brand',
+                'vehicle.category',
+                'vehicle.transmissionType',
+                'vehicle.fuelType',
+                'pickupLocation',
+                'dropoffLocation',
+                'payments.paymentMethod',
+                'payments.paymentStatus',
+                'paymentStatus',
+            ]);
+
             $contractNumber = $contract?->contract_number ?? $this->generateContractNumber();
             $series = $contractSeries ?? $contract?->contract_series ?? 'A';
             $pdfPath = $this->generatePdf($reservation, $contractNumber, $details, $series);
