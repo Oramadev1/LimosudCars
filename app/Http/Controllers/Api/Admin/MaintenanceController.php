@@ -178,10 +178,6 @@ class MaintenanceController extends Controller
             }
         }
 
-        if (array_key_exists('cost', $prepared) && $prepared['cost'] === null) {
-            $prepared['cost'] = 0;
-        }
-
         if (array_key_exists('maintenance_type_slug', $data)) {
             $typeId = MaintenanceType::where('slug', $data['maintenance_type_slug'])->value('id');
 
@@ -194,7 +190,7 @@ class MaintenanceController extends Controller
             $prepared['maintenance_type_id'] = $typeId;
         }
 
-        return $partial ? $prepared : array_merge(['cost' => 0], $prepared);
+        return $prepared;
     }
 
     private function updateVehicleStatusIfRequested(Vehicle $vehicle, ?string $statusSlug): void

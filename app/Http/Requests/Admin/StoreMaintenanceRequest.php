@@ -19,6 +19,10 @@ class StoreMaintenanceRequest extends FormRequest
         if ($vehicleId === 0 || $vehicleId === '0' || $vehicleId === '') {
             $this->merge(['vehicle_id' => null]);
         }
+
+        if ($this->has('cost') && ($this->input('cost') === '' || $this->input('cost') === null)) {
+            $this->merge(['cost' => null]);
+        }
     }
 
     /**
@@ -32,7 +36,7 @@ class StoreMaintenanceRequest extends FormRequest
             'maintenance_date' => ['required', 'date'],
             'next_maintenance_date' => ['nullable', 'date', 'after_or_equal:maintenance_date'],
             'mileage' => ['nullable', 'integer', 'min:0'],
-            'cost' => ['nullable', 'numeric', 'min:0'],
+            'cost' => ['required', 'numeric', 'gt:0'],
             'garage_name' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'vehicle_status_slug' => ['nullable', 'string', 'exists:vehicle_statuses,slug'],
@@ -54,6 +58,8 @@ class StoreMaintenanceRequest extends FormRequest
             'maintenance_date.required' => 'Please enter the maintenance date.',
             'maintenance_date.date' => 'The maintenance date must be a valid date.',
             'next_maintenance_date.after_or_equal' => 'The next maintenance date must be on or after the maintenance date.',
+            'cost.required' => 'Please enter the maintenance cost.',
+            'cost.gt' => 'The maintenance cost must be greater than zero.',
             'expense_category_slug.required_if' => 'Please select an expense category when recording a cost.',
             'expense_category_slug.exists' => 'The selected expense category is invalid.',
         ];
@@ -69,6 +75,7 @@ class StoreMaintenanceRequest extends FormRequest
             'maintenance_type_slug' => 'maintenance type',
             'maintenance_date' => 'maintenance date',
             'next_maintenance_date' => 'next maintenance date',
+            'cost' => 'cost',
             'garage_name' => 'garage name',
             'expense_category_slug' => 'expense category',
         ];

@@ -12,6 +12,13 @@ class UpdateMaintenanceRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('cost') && ($this->input('cost') === '' || $this->input('cost') === null)) {
+            $this->merge(['cost' => null]);
+        }
+    }
+
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
@@ -23,10 +30,21 @@ class UpdateMaintenanceRequest extends FormRequest
             'maintenance_date' => ['sometimes', 'date'],
             'next_maintenance_date' => ['nullable', 'date'],
             'mileage' => ['nullable', 'integer', 'min:0'],
-            'cost' => ['nullable', 'numeric', 'min:0'],
+            'cost' => ['sometimes', 'required', 'numeric', 'gt:0'],
             'garage_name' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'vehicle_status_slug' => ['nullable', 'string', 'exists:vehicle_statuses,slug'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'cost.required' => 'Please enter the maintenance cost.',
+            'cost.gt' => 'The maintenance cost must be greater than zero.',
         ];
     }
 }

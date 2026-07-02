@@ -56,26 +56,33 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_create_maintenance_without_cost(): void
+    public function test_maintenance_store_rejects_missing_or_zero_cost(): void
     {
         $this->seed();
         $token = $this->adminToken();
         $vehicle = $this->vehicle();
+        $payload = [
+            'vehicle_id' => $vehicle->id,
+            'maintenance_type_slug' => 'oil_change',
+            'maintenance_date' => now()->toDateString(),
+        ];
 
         $this->withToken($token)
-            ->postJson('/api/admin/maintenances', [
-                'vehicle_id' => $vehicle->id,
-                'maintenance_type_slug' => 'oil_change',
-                'maintenance_date' => now()->toDateString(),
-                'cost' => null,
-            ])
-            ->assertCreated()
-            ->assertJsonPath('data.cost', '0.00');
+            ->postJson('/api/admin/maintenances', $payload)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['cost'])
+            ->assertJsonPath('errors.cost.0', 'Please enter the maintenance cost.');
 
-        $this->assertDatabaseHas('vehicle_maintenances', [
-            'vehicle_id' => $vehicle->id,
-            'cost' => 0,
-        ]);
+        $this->withToken($token)
+            ->postJson('/api/admin/maintenances', [...$payload, 'cost' => null])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['cost']);
+
+        $this->withToken($token)
+            ->postJson('/api/admin/maintenances', [...$payload, 'cost' => 0])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['cost'])
+            ->assertJsonPath('errors.cost.0', 'The maintenance cost must be greater than zero.');
     }
 
     public function test_upcoming_maintenance_endpoint_lists_future_next_maintenance_dates(): void
@@ -254,7 +261,7 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
         $this->withToken($token)
             ->postJson('/api/admin/maintenances', [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['vehicle_id', 'maintenance_type_slug', 'maintenance_date']);
+            ->assertJsonValidationErrors(['vehicle_id', 'maintenance_type_slug', 'maintenance_date', 'cost']);
 
         $this->withToken($token)
             ->postJson('/api/admin/maintenances', [
