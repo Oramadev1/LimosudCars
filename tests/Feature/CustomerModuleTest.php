@@ -195,4 +195,48 @@ class CustomerModuleTest extends TestCase
             ->assertJsonValidationErrors(['passport_or_cin_normalized']);
     }
 
+    public function test_admin_update_merges_customer_when_passport_or_cin_belongs_to_another_phone(): void
+    {
+        $this->seed();
+
+        $token = $this->adminToken();
+        $vehicle = Vehicle::factory()->create();
+        $sourceId = ReservationSource::where('slug', 'website')->value('id');
+        $pendingStatusId = ReservationStatus::where('slug', 'pending')->value('id');
+        $unpaidStatusId = PaymentStatus::where('slug', 'unpaid')->value('id');
+
+        $primaryCustomer = Customer::factory()->create([
+            'phone' => '0611111111',
+            'passport_or_cin' => null,
+        ]);
+
+        $duplicateCustomer = Customer::factory()->create([
+            'phone' => '0622222222',
+            'passport_or_cin' => 'AA123456',
+        ]);
+
+        $duplicateReservation = Reservation::factory()->create([
+            'customer_id' => $duplicateCustomer->id,
+            'vehicle_id' => $vehicle->id,
+            'source_id' => $sourceId,
+            'status_id' => $pendingStatusId,
+            'payment_status_id' => $unpaidStatusId,
+        ]);
+
+        $this->withToken($token)
+            ->patchJson("/api/admin/customers/{$primaryCustomer->id}", [
+                'passport_or_cin' => 'AA 123-456',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.id', $primaryCustomer->id)
+            ->assertJsonPath('data.passport_or_cin', 'AA 123-456')
+            ->assertJsonPath('data.phone', '0611111111');
+
+        $this->assertSoftDeleted('customers', ['id' => $duplicateCustomer->id]);
+        $this->assertDatabaseHas('reservations', [
+            'id' => $duplicateReservation->id,
+            'customer_id' => $primaryCustomer->id,
+        ]);
+    }
+
 }

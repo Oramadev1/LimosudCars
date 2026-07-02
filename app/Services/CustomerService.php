@@ -37,6 +37,63 @@ class CustomerService
     }
 
     /**
+     * Merge another customer profile into the keeper when admin updates identity fields
+     * that already belong to a duplicate record (e.g. same passport, different phone).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function mergeConflictingCustomersBeforeSave(Customer $keeper, array $data): Customer
+    {
+        $passportNormalized = isset($data['passport_or_cin_normalized'])
+            ? (string) $data['passport_or_cin_normalized']
+            : '';
+
+        if ($passportNormalized !== '') {
+            $duplicate = $this->findByNormalizedPassportOrCin($passportNormalized);
+
+            if ($duplicate && $duplicate->id !== $keeper->id) {
+                $this->mergeCustomerInto($keeper, $duplicate);
+                $keeper->refresh();
+            }
+        }
+
+        $phoneNormalized = isset($data['phone_normalized'])
+            ? (string) $data['phone_normalized']
+            : '';
+
+        if ($phoneNormalized !== '') {
+            $duplicate = $this->findByNormalizedPhone($phoneNormalized);
+
+            if ($duplicate && $duplicate->id !== $keeper->id) {
+                $this->mergeCustomerInto($keeper, $duplicate);
+                $keeper->refresh();
+            }
+        }
+
+        return $keeper;
+    }
+
+    public function mergeCustomerInto(Customer $keeper, Customer $duplicate): void
+    {
+        if ($keeper->id === $duplicate->id) {
+            return;
+        }
+
+        $duplicate->reservations()->update(['customer_id' => $keeper->id]);
+        $duplicate->documents()->update(['customer_id' => $keeper->id]);
+        $this->fillMissingAttributes($keeper, $duplicate->only([
+            'full_name',
+            'nationality',
+            'phone',
+            'email',
+            'passport_or_cin',
+            'driving_license_number',
+        ]));
+        $keeper->save();
+        $duplicate->delete();
+    }
+
+    /**
      * Merge duplicate customers by passport/CIN first, then by phone.
      *
      * @return int Number of duplicate records removed.
@@ -117,18 +174,7 @@ class CustomerService
                     continue;
                 }
 
-                $duplicate->reservations()->update(['customer_id' => $keeper->id]);
-                $duplicate->documents()->update(['customer_id' => $keeper->id]);
-                $this->fillMissingAttributes($keeper, $duplicate->only([
-                    'full_name',
-                    'nationality',
-                    'phone',
-                    'email',
-                    'passport_or_cin',
-                    'driving_license_number',
-                ]));
-                $keeper->save();
-                $duplicate->delete();
+                $this->mergeCustomerInto($keeper, $duplicate);
                 $removed++;
             }
         }

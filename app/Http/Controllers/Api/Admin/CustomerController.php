@@ -12,6 +12,7 @@ use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Models\CustomerDocument;
 use App\Models\DocumentType;
+use App\Services\CustomerService;
 use App\Services\CustomerStatisticsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -89,9 +90,18 @@ class CustomerController extends Controller
      * @bodyParam email string optional Customer email. Example: updated@example.com
      * @bodyParam driving_license_number string optional Driving license number. Example: DL-2026-002
      */
-    public function update(UpdateCustomerRequest $request, Customer $customer): CustomerResource
-    {
-        $customer->update($request->validated());
+    public function update(
+        UpdateCustomerRequest $request,
+        Customer $customer,
+        CustomerService $customerService,
+    ): CustomerResource {
+        $customer = DB::transaction(function () use ($request, $customer, $customerService): Customer {
+            $data = $request->validated();
+            $customer = $customerService->mergeConflictingCustomersBeforeSave($customer, $data);
+            $customer->update($data);
+
+            return $customer;
+        });
 
         return new CustomerResource($customer->load('documents.documentType'));
     }

@@ -6,7 +6,6 @@ use App\Support\IdentityDocument;
 use App\Support\PhoneNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateCustomerRequest extends FormRequest
 {
@@ -51,18 +50,12 @@ class UpdateCustomerRequest extends FormRequest
             'phone_normalized' => [
                 'required_with:phone',
                 'string',
-                Rule::unique('customers', 'phone_normalized')
-                    ->ignore($this->route('customer'))
-                    ->whereNull('deleted_at'),
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'passport_or_cin' => ['nullable', 'string', 'max:255'],
             'passport_or_cin_normalized' => [
                 'nullable',
                 'string',
-                Rule::unique('customers', 'passport_or_cin_normalized')
-                    ->ignore($this->route('customer'))
-                    ->whereNull('deleted_at'),
             ],
             'driving_license_number' => ['nullable', 'string', 'max:255'],
         ];
@@ -73,9 +66,6 @@ class UpdateCustomerRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'phone_normalized.unique' => 'A customer with this phone number already exists.',
-            'passport_or_cin_normalized.unique' => 'A customer with this passport or CIN already exists.',
-        ];
+        return [];
     }
 }
