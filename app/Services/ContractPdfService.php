@@ -7,6 +7,7 @@ use App\Models\ContractStatus;
 use App\Models\PaymentStatus;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Support\ContractDetails;
 use App\Support\ContractViewData;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +16,6 @@ use Illuminate\Validation\ValidationException;
 
 class ContractPdfService
 {
-    /**
-     * Generate a unique contract number.
-     */
     public function generateContractNumber(): string
     {
         do {
@@ -27,15 +25,21 @@ class ContractPdfService
         return $number;
     }
 
-    /**
-     * Generate and store a reservation contract PDF on the private disk.
+  /**
+     * @param  array<string, mixed>  $details
      */
-    public function generatePdf(Reservation $reservation, string $contractNumber): string
-    {
+    public function generatePdf(
+        Reservation $reservation,
+        string $contractNumber,
+        array $details = [],
+        string $contractSeries = 'A',
+    ): string {
         $reservation->loadMissing([
             'customer',
             'vehicle.brand',
             'vehicle.category',
+            'vehicle.transmissionType',
+            'vehicle.fuelType',
             'source',
             'status',
             'paymentStatus',
@@ -45,7 +49,7 @@ class ContractPdfService
             'payments.paymentStatus',
         ]);
 
-        $html = $this->contractHtml($reservation, $contractNumber);
+        $html = $this->contractHtml($reservation, $contractNumber, $details, $contractSeries);
         $path = 'contracts/'.$contractNumber.'.pdf';
 
         Storage::disk('local')->put($path, app(ContractMpdfRenderer::class)->render($html));
@@ -54,53 +58,63 @@ class ContractPdfService
     }
 
     /**
-     * Create or regenerate a contract for an eligible reservation.
+     * @param  array<string, mixed>  $inputDetails
      */
-    public function createOrRegenerateContract(Reservation $reservation, ?User $user = null): Contract
-    {
-        return DB::transaction(function () use ($reservation, $user): Contract {
+    public function createOrRegenerateContract(
+        Reservation $reservation,
+        ?User $user = null,
+        array $inputDetails = [],
+        ?string $contractSeries = null,
+    ): Contract {
+        return DB::transaction(function () use ($reservation, $user, $inputDetails, $contractSeries): Contract {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
-            $reservation->loadMissing('status');
+            $reservation->loadMissing('status', 'customer', 'vehicle');
 
             $this->ensureReservationCanGenerateContract($reservation);
 
             $contract = Contract::withTrashed()->where('reservation_id', $reservation->id)->first();
+            $details = ContractDetails::merge(
+                ContractDetails::fromReservation($reservation, $contract),
+                $inputDetails,
+            );
+
+            ContractDetails::persistRelatedRecords($reservation, $details);
+
             $contractNumber = $contract?->contract_number ?? $this->generateContractNumber();
-            $pdfPath = $this->generatePdf($reservation, $contractNumber);
+            $series = $contractSeries ?? $contract?->contract_series ?? 'A';
+            $pdfPath = $this->generatePdf($reservation, $contractNumber, $details, $series);
 
             if ($contract?->trashed()) {
                 $contract->restore();
             }
+
+            $payload = [
+                'status_id' => $this->contractStatusId('generated'),
+                'contract_series' => $series,
+                'pdf_path' => $pdfPath,
+                'details' => $details,
+                'generated_by' => $user?->id,
+                'generated_at' => now(),
+            ];
 
             if ($contract) {
                 if ($contract->pdf_path && $contract->pdf_path !== $pdfPath) {
                     Storage::disk('local')->delete($contract->pdf_path);
                 }
 
-                $contract->update([
-                    'status_id' => $this->contractStatusId('generated'),
-                    'pdf_path' => $pdfPath,
-                    'generated_by' => $user?->id,
-                    'generated_at' => now(),
-                ]);
+                $contract->update($payload);
 
                 return $contract;
             }
 
             return Contract::create([
                 'reservation_id' => $reservation->id,
-                'status_id' => $this->contractStatusId('generated'),
                 'contract_number' => $contractNumber,
-                'pdf_path' => $pdfPath,
-                'generated_by' => $user?->id,
-                'generated_at' => now(),
+                ...$payload,
             ]);
         });
     }
 
-    /**
-     * Mark a contract as signed and optionally store the signed PDF.
-     */
     public function markSigned(Contract $contract, ?UploadedFile $signedPdfFile = null): Contract
     {
         return DB::transaction(function () use ($contract, $signedPdfFile): Contract {
@@ -143,9 +157,6 @@ class ContractPdfService
         });
     }
 
-    /**
-     * Mark a contract as cancelled without deleting the generated record.
-     */
     public function cancel(Contract $contract): Contract
     {
         return DB::transaction(function () use ($contract): Contract {
@@ -189,8 +200,15 @@ class ContractPdfService
         return ContractStatus::where('slug', $slug)->firstOrFail()->id;
     }
 
-    private function contractHtml(Reservation $reservation, string $contractNumber): string
-    {
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    private function contractHtml(
+        Reservation $reservation,
+        string $contractNumber,
+        array $details,
+        string $contractSeries,
+    ): string {
         $paidStatusId = PaymentStatus::where('slug', 'paid')->value('id');
         $paidAmount = (float) $reservation->payments
             ->where('payment_status_id', $paidStatusId)
@@ -199,14 +217,14 @@ class ContractPdfService
         $logoPath = public_path('images/logo.jpg');
         $logoData = is_readable($logoPath) ? base64_encode((string) file_get_contents($logoPath)) : null;
 
-        $html = view('pdf.contract', ContractViewData::fromReservation(
+        return view('pdf.contract', ContractViewData::fromReservation(
             $reservation,
             $contractNumber,
             $paidAmount,
             $remainingAmount,
             $logoData,
+            $details,
+            $contractSeries,
         ))->render();
-
-        return $html;
     }
 }

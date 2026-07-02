@@ -229,6 +229,51 @@ class ContractModuleTest extends TestCase
         ]);
     }
 
+    public function test_contract_form_endpoint_returns_prefilled_data(): void
+    {
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+
+        $this->withToken($this->adminToken())
+            ->getJson("/api/admin/reservations/{$reservation->id}/contract/form")
+            ->assertOk()
+            ->assertJsonPath('data.reservation_id', $reservation->id)
+            ->assertJsonPath('data.can_generate', true)
+            ->assertJsonStructure([
+                'data' => [
+                    'auto' => ['customer', 'vehicle', 'rental', 'payment'],
+                    'details' => ['customer', 'vehicle', 'equipment', 'documents'],
+                    'missing_fields',
+                ],
+            ]);
+    }
+
+    public function test_generate_contract_accepts_details_payload(): void
+    {
+        Storage::fake('local');
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+
+        $this->withToken($this->adminToken())
+            ->postJson("/api/admin/reservations/{$reservation->id}/contract/generate", [
+                'contract_series' => 'B',
+                'details' => [
+                    'customer' => ['address' => 'Hay Al Qods N10'],
+                    'equipment' => ['jack' => true, 'warning_triangle' => true],
+                    'insurance' => ['type' => 'premium', 'deductible' => 4000],
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.contract_series', 'B');
+
+        $contract = Contract::firstOrFail();
+        $this->assertSame('B', $contract->contract_series);
+        $this->assertSame('Hay Al Qods N10', $contract->details['customer']['address']);
+        $this->assertTrue($contract->details['equipment']['jack']);
+    }
+
     private function reservation(string $statusSlug): Reservation
     {
         [$pickupLocation, $dropoffLocation] = $this->locations();

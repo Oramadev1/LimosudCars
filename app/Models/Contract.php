@@ -22,8 +22,10 @@ class Contract extends Model
         'reservation_id',
         'status_id',
         'contract_number',
+        'contract_series',
         'pdf_path',
         'signed_pdf_path',
+        'details',
         'generated_by',
         'generated_at',
         'signed_at',
@@ -37,6 +39,7 @@ class Contract extends Model
     protected function casts(): array
     {
         return [
+            'details' => 'array',
             'generated_at' => 'datetime',
             'signed_at' => 'datetime',
         ];

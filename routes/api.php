@@ -136,6 +136,7 @@ Route::middleware('auth:api')->prefix('admin')->group(function (): void {
     Route::post('/reservations/{reservation}/reject', [ReservationController::class, 'reject'])->middleware('permission:reservations.reject');
     Route::post('/reservations/{reservation}/reopen', [ReservationController::class, 'reopen'])->middleware('permission:reservations.update');
     Route::get('/reservations/{reservation}/payment-summary', [PaymentController::class, 'summary'])->middleware('permission:payments.view');
+    Route::get('/reservations/{reservation}/contract/form', [ContractController::class, 'form'])->middleware('permission:contracts.generate');
     Route::post('/reservations/{reservation}/contract/generate', [ContractController::class, 'generate'])->middleware('permission:contracts.generate');
     Route::get('/reservations/{reservation}/contract', [ContractController::class, 'showByReservation'])->middleware('permission:contracts.view');
 

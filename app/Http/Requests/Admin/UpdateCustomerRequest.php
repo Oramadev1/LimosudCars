@@ -58,6 +58,12 @@ class UpdateCustomerRequest extends FormRequest
                 'string',
             ],
             'driving_license_number' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'foreign_address' => ['nullable', 'string', 'max:255'],
+            'driving_license_issued_at' => ['nullable', 'date'],
+            'driving_license_expires_at' => ['nullable', 'date'],
+            'driving_license_country' => ['nullable', 'string', 'max:255'],
+            'passport_or_cin_issued_at' => ['nullable', 'date'],
         ];
     }
 

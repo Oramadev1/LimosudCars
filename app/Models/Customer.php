@@ -26,10 +26,28 @@ class Customer extends Model
         'phone',
         'phone_normalized',
         'email',
+        'address',
+        'foreign_address',
         'passport_or_cin',
         'passport_or_cin_normalized',
+        'passport_or_cin_issued_at',
         'driving_license_number',
+        'driving_license_issued_at',
+        'driving_license_expires_at',
+        'driving_license_country',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'driving_license_issued_at' => 'date',
+            'driving_license_expires_at' => 'date',
+            'passport_or_cin_issued_at' => 'date',
+        ];
+    }
 
     protected static function booted(): void
     {

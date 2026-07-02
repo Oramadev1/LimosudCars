@@ -23,6 +23,7 @@ class ContractResource extends JsonResource
             'id' => $this->id,
             'reservation_id' => $this->reservation_id,
             'contract_number' => $this->contract_number,
+            'contract_series' => $this->contract_series,
             'status' => $this->lookup('status'),
             'has_pdf' => filled($this->pdf_path),
             'has_signed_pdf' => filled($this->signed_pdf_path),
