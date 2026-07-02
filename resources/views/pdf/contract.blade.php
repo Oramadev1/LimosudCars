@@ -159,27 +159,70 @@
                 </tr>
                 @if (!empty($driver['enabled']))
                     <tr>
-                        <td class="cell" colspan="2" style="border-top: 0;">
-                            <div class="value">{{ $driver['full_name'] ?? '' }} · {{ $driver['nationality'] ?? '' }} · {{ $driver['phone'] ?? '' }}</div>
+                        <td class="cell" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'NOM ET PRENOM', 'ar' => $ar['nom_prenom']])
+                            @if (!empty($driver['full_name']))<div class="value">{{ $driver['full_name'] }}</div>@else<div class="value-line"></div>@endif
+                        </td>
+                        <td class="cell" style="border-top: 0; border-left: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'ADRESSE', 'ar' => $ar['adresse']])
+                            @if (!empty($driver['address']))<div class="value">{{ $driver['address'] }}</div>@else<div class="value-line"></div>@endif
                         </td>
                     </tr>
                     <tr>
-                        <td class="cell" style="border-top: 0;"><div class="value">{{ $driver['address'] ?? '' }}</div></td>
-                        <td class="cell" style="border-top: 0; border-left: 0;"><div class="value">{{ $driver['passport_or_cin'] ?? '' }}</div></td>
+                        <td class="cell" colspan="2" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'NATIONALITÉ / TÉL', 'ar' => $ar['nationalite']])
+                            <div class="value">{{ trim(($driver['nationality'] ?? '').' · '.($driver['phone'] ?? '')) ?: ' ' }}</div>
+                        </td>
                     </tr>
                     <tr>
-                        <td class="cell" style="border-top: 0;"><div class="value">{{ $driver['driving_license_number'] ?? '' }}</div></td>
-                        <td class="cell" style="border-top: 0; border-left: 0;"><div class="value">{{ ($driver['license_issued_at'] ?? '').' / '.($driver['license_expires_at'] ?? '') }}</div></td>
+                        <td class="cell" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'Permis de conduire', 'ar' => $ar['permis']])
+                            @if (!empty($driver['driving_license_number']))<div class="value">{{ $driver['driving_license_number'] }}</div>@else<div class="value-line"></div>@endif
+                        </td>
+                        <td class="cell" style="border-top: 0; border-left: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'Délivré / Expire', 'ar' => $ar['delivre']])
+                            <div class="value">{{ trim(($driver['license_issued_at'] ?? '').' / '.($driver['license_expires_at'] ?? '')) ?: ' ' }}</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" colspan="2" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'C.I.N N° ou passeport', 'ar' => $ar['cin_passeport']])
+                            @if (!empty($driver['passport_or_cin']))<div class="value">{{ $driver['passport_or_cin'] }}</div>@else<div class="value-line"></div>@endif
+                        </td>
                     </tr>
                 @else
-                    @foreach (['NOM ET PRENOM' => $ar['nom_prenom'], 'ADRESSE' => $ar['adresse']] as $fr => $labelAr)
-                        <tr>
-                            <td class="cell" colspan="2" style="border-top: 0;">
-                                @include('pdf.partials.bilingual-label', ['fr' => $fr, 'ar' => $labelAr])
-                                <div class="value-line"></div>
-                            </td>
-                        </tr>
-                    @endforeach
+                    <tr>
+                        <td class="cell" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'NOM ET PRENOM', 'ar' => $ar['nom_prenom']])
+                            <div class="value-line"></div>
+                        </td>
+                        <td class="cell" style="border-top: 0; border-left: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'ADRESSE', 'ar' => $ar['adresse']])
+                            <div class="value-line"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" colspan="2" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'NATIONALITÉ / TÉL', 'ar' => $ar['nationalite']])
+                            <div class="value-line"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'Permis de conduire', 'ar' => $ar['permis']])
+                            <div class="value-line"></div>
+                        </td>
+                        <td class="cell" style="border-top: 0; border-left: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'Délivré / Expire', 'ar' => $ar['delivre']])
+                            <div class="value-line"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="cell" colspan="2" style="border-top: 0;">
+                            @include('pdf.partials.bilingual-label', ['fr' => 'C.I.N N° ou passeport', 'ar' => $ar['cin_passeport']])
+                            <div class="value-line"></div>
+                        </td>
+                    </tr>
                 @endif
             </table>
         </td>

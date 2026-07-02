@@ -287,6 +287,52 @@ class ContractModuleTest extends TestCase
         $this->assertStringContainsString('Hay Al Qods N10', $html);
     }
 
+    public function test_contract_html_shows_labeled_additional_driver_fields(): void
+    {
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+        $reservation->loadMissing([
+            'customer',
+            'vehicle.brand',
+            'vehicle.category',
+            'pickupLocation',
+            'dropoffLocation',
+            'payments.paymentMethod',
+        ]);
+
+        $details = [
+            'additional_driver' => [
+                'enabled' => true,
+                'full_name' => 'Ahmed Benali',
+                'address' => 'Rue Hassan II, Casablanca',
+                'nationality' => 'Moroccan',
+                'phone' => '+212600111222',
+                'passport_or_cin' => 'AB123456',
+                'driving_license_number' => 'DL-998877',
+                'license_issued_at' => '2020-01-15',
+                'license_expires_at' => '2030-01-15',
+            ],
+        ];
+
+        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
+            $reservation,
+            'CTR-TEST-0001',
+            0,
+            1500,
+            null,
+            $details,
+        ))->render();
+
+        $this->assertStringContainsString('NOM ET PRENOM', $html);
+        $this->assertStringContainsString('Ahmed Benali', $html);
+        $this->assertStringContainsString('Permis de conduire', $html);
+        $this->assertStringContainsString('DL-998877', $html);
+        $this->assertStringContainsString('C.I.N N° ou passeport', $html);
+        $this->assertStringContainsString('AB123456', $html);
+        $this->assertStringContainsString('الاسم والنسب', $html);
+    }
+
     private function reservation(string $statusSlug): Reservation
     {
         [$pickupLocation, $dropoffLocation] = $this->locations();
