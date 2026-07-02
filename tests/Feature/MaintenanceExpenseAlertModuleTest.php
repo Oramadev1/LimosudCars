@@ -224,6 +224,27 @@ class MaintenanceExpenseAlertModuleTest extends TestCase
         $this->assertSame(1, Alert::count());
     }
 
+    public function test_maintenance_store_returns_validation_errors_when_required_fields_missing(): void
+    {
+        $this->seed();
+        $token = $this->adminToken();
+
+        $this->withToken($token)
+            ->postJson('/api/admin/maintenances', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['vehicle_id', 'maintenance_type_slug', 'maintenance_date']);
+
+        $this->withToken($token)
+            ->postJson('/api/admin/maintenances', [
+                'vehicle_id' => 0,
+                'maintenance_type_slug' => 'oil_change',
+                'maintenance_date' => now()->toDateString(),
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['vehicle_id'])
+            ->assertJsonPath('errors.vehicle_id.0', 'Please select a vehicle.');
+    }
+
     private function vehicle(): Vehicle
     {
         return Vehicle::factory()->create([

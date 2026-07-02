@@ -179,7 +179,15 @@ class MaintenanceController extends Controller
         }
 
         if (array_key_exists('maintenance_type_slug', $data)) {
-            $prepared['maintenance_type_id'] = MaintenanceType::where('slug', $data['maintenance_type_slug'])->firstOrFail()->id;
+            $typeId = MaintenanceType::where('slug', $data['maintenance_type_slug'])->value('id');
+
+            if ($typeId === null) {
+                throw ValidationException::withMessages([
+                    'maintenance_type_slug' => 'The selected maintenance type is invalid.',
+                ]);
+            }
+
+            $prepared['maintenance_type_id'] = $typeId;
         }
 
         return $partial ? $prepared : array_merge(['cost' => 0], $prepared);
@@ -211,8 +219,16 @@ class MaintenanceController extends Controller
             return;
         }
 
+        $categoryId = ExpenseCategory::where('slug', $data['expense_category_slug'] ?? '')->value('id');
+
+        if ($categoryId === null) {
+            throw ValidationException::withMessages([
+                'expense_category_slug' => 'The selected expense category is invalid.',
+            ]);
+        }
+
         $maintenance->vehicle->expenses()->create([
-            'expense_category_id' => ExpenseCategory::where('slug', $data['expense_category_slug'])->firstOrFail()->id,
+            'expense_category_id' => $categoryId,
             'amount' => $data['cost'] ?? 0,
             'expense_date' => $data['maintenance_date'],
             'description' => 'Maintenance cost: '.($data['garage_name'] ?? 'Vehicle maintenance'),
