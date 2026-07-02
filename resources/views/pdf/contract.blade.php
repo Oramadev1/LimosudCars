@@ -404,28 +404,6 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2" class="cell" style="border-top:0;">
-                        <div class="fr-label">Date de paiement programmé</div>
-                        <div class="value">{{ $scheduledPaymentDate ?: ' ' }}</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="cell tiny" style="width:50%; border-top:0;">Caution: {{ $depositAmount }}</td>
-                    <td class="cell tiny" style="width:50%; border-top:0; border-left:0;">Livraison: {{ $deliveryFee }}</td>
-                </tr>
-                <tr>
-                    <td class="cell tiny" style="border-top:0;">Remise: {{ $discount }}</td>
-                    <td class="cell tiny" style="border-top:0; border-left:0;">Frais divers: {{ $additionalFees }}</td>
-                </tr>
-                <tr>
-                    <td class="cell tiny" style="border-top:0;">Retard: {{ $lateReturnFees }}</td>
-                    <td class="cell tiny" style="border-top:0; border-left:0;">Carburant: {{ $fuelCharges }}</td>
-                </tr>
-                <tr>
-                    <td class="cell tiny" style="border-top:0;">Nettoyage: {{ $cleaningCharges }}</td>
-                    <td class="cell tiny" style="border-top:0; border-left:0;">Dommages: {{ $damageCharges }}</td>
-                </tr>
-                <tr>
                     <td class="cell" style="border-top:0;">
                         <div class="fr-label">Total général</div>
                         <div class="value">{{ $grandTotal }}</div>
