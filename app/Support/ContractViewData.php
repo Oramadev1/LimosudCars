@@ -124,8 +124,6 @@ class ContractViewData
             'additionalDriver' => $additionalDriver,
             'equipment' => $details['equipment'],
             'documents' => $details['documents'],
-            'conditionBefore' => $details['condition']['before'],
-            'conditionAfter' => $details['condition']['after'],
             'extension' => $details['rental']['extension'] ?? '',
             'extensionTotal' => $details['rental']['extension_total'] ?? '',
             'insuranceType' => $details['insurance']['type'] ?? 'basic',
@@ -172,11 +170,23 @@ class ContractViewData
                 ['key' => 'vignette', 'label' => 'VIGNETT'],
                 ['key' => 'rental_contract_copy', 'label' => 'CONTRAT'],
             ],
-            'conditionViews' => [
-                ['key' => 'roof', 'label' => 'Vue dessus'],
-                ['key' => 'front', 'label' => 'Avant / Arrière'],
-                ['key' => 'left', 'label' => 'Côtés'],
-            ],
+        ];
+    }
+
+    /**
+     * @return array{mime: string, data: string}|null
+     */
+    public static function vehicleConditionImage(): ?array
+    {
+        $path = public_path((string) config('limosud.vehicle_condition_image'));
+
+        if (! is_readable($path)) {
+            return null;
+        }
+
+        return [
+            'mime' => mime_content_type($path) ?: 'image/jpeg',
+            'data' => base64_encode((string) file_get_contents($path)),
         ];
     }
 

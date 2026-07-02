@@ -56,13 +56,7 @@ class ContractModuleTest extends TestCase
             'payments.paymentMethod',
         ]);
 
-        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
-            $reservation,
-            'CTR-20260615-1234',
-            300,
-            1200,
-            null,
-        ))->render();
+        $html = $this->renderContractHtml($reservation, 'CTR-20260615-1234', 300, 1200, null);
 
         $this->assertStringContainsString('LIMOSUD CARS', $html);
         $this->assertStringContainsString('Locataire', $html);
@@ -73,6 +67,8 @@ class ContractModuleTest extends TestCase
         $this->assertStringContainsString('Le locataire', $html);
         $this->assertStringContainsString('Le loueur', $html);
         $this->assertStringContainsString('État voiture', $html);
+        $this->assertStringContainsString('vehicle-condition-image', $html);
+        $this->assertStringContainsString('data:image/jpeg;base64,', $html);
         $this->assertStringContainsString('Papier de Véhicule', $html);
     }
 
@@ -274,7 +270,7 @@ class ContractModuleTest extends TestCase
         $this->assertTrue($contract->details['equipment']['jack']);
 
         $reservation->loadMissing(['customer', 'vehicle.brand', 'vehicle.category', 'pickupLocation', 'dropoffLocation', 'payments.paymentMethod']);
-        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
+        $html = $this->renderContractHtml(
             $reservation,
             $contract->contract_number,
             0,
@@ -282,7 +278,7 @@ class ContractModuleTest extends TestCase
             null,
             $contract->details,
             $contract->contract_series,
-        ))->render();
+        );
 
         $this->assertStringContainsString('Hay Al Qods N10', $html);
     }
@@ -315,14 +311,14 @@ class ContractModuleTest extends TestCase
             ],
         ];
 
-        $html = view('pdf.contract', \App\Support\ContractViewData::fromReservation(
+        $html = $this->renderContractHtml(
             $reservation,
             'CTR-TEST-0001',
             0,
             1500,
             null,
             $details,
-        ))->render();
+        );
 
         $this->assertStringContainsString('NOM ET PRENOM', $html);
         $this->assertStringContainsString('Ahmed Benali', $html);
@@ -331,6 +327,34 @@ class ContractModuleTest extends TestCase
         $this->assertStringContainsString('C.I.N N° ou passeport', $html);
         $this->assertStringContainsString('AB123456', $html);
         $this->assertStringContainsString('الاسم والنسب', $html);
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    private function renderContractHtml(
+        Reservation $reservation,
+        string $contractNumber,
+        float $paidAmount,
+        float $remainingAmount,
+        ?string $logoData = null,
+        array $details = [],
+        string $contractSeries = 'A',
+    ): string {
+        return view('pdf.contract', array_merge(
+            \App\Support\ContractViewData::fromReservation(
+                $reservation,
+                $contractNumber,
+                $paidAmount,
+                $remainingAmount,
+                $logoData,
+                $details,
+                $contractSeries,
+            ),
+            [
+                'vehicleConditionImage' => \App\Support\ContractViewData::vehicleConditionImage(),
+            ],
+        ))->render();
     }
 
     private function reservation(string $statusSlug): Reservation

@@ -19,6 +19,7 @@
         .legal-ar { direction: rtl; font-family: scheherazade, dejavusans, sans-serif; margin-bottom: 4px; text-align: justify; unicode-bidi: embed; }
         .car-panel { border: 1px solid #000; height: 34px; margin-bottom: 2px; text-align: center; font-size: 6pt; padding: 2px; }
         .car-panel-title { font-size: 6pt; font-weight: bold; }
+        .vehicle-condition-image { display: block; height: auto; width: 100%; }
         .paper-item { font-size: 6.5pt; line-height: 1.5; text-align: center; }
         .header-title { font-size: 14pt; font-weight: bold; }
         .header-sub { font-size: 8pt; font-weight: bold; }
@@ -353,27 +354,16 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="cell center fr-label" style="width:50%; border-top:0;">Départ</td>
-                    <td class="cell center fr-label" style="width:50%; border-top:0; border-left:0;">Retour</td>
-                </tr>
-                <tr>
-                    <td class="cell" style="border-top:0;">
-                        @foreach ($conditionViews as $view)
-                            <div class="car-panel">
-                                <div class="car-panel-title">{{ $view['label'] }}</div>
-                                {{ $conditionBefore[$view['key']] ?? '' }}
-                            </div>
-                        @endforeach
-                        @if (!empty($conditionBefore['notes']))<div class="tiny">Notes: {{ $conditionBefore['notes'] }}</div>@endif
-                    </td>
-                    <td class="cell" style="border-top:0; border-left:0;">
-                        @foreach ($conditionViews as $view)
-                            <div class="car-panel">
-                                <div class="car-panel-title">{{ $view['label'] }}</div>
-                                {{ $conditionAfter[$view['key']] ?? '' }}
-                            </div>
-                        @endforeach
-                        @if (!empty($conditionAfter['notes']))<div class="tiny">Notes: {{ $conditionAfter['notes'] }}</div>@endif
+                    <td colspan="2" class="cell" style="border-top:0; padding: 4px;">
+                        @if (!empty($vehicleConditionImage['data']))
+                            <img
+                                src="data:{{ $vehicleConditionImage['mime'] }};base64,{{ $vehicleConditionImage['data'] }}"
+                                alt="Vehicle condition diagram"
+                                class="vehicle-condition-image"
+                            >
+                        @else
+                            <div class="tiny center">Vehicle condition diagram unavailable.</div>
+                        @endif
                     </td>
                 </tr>
             </table>

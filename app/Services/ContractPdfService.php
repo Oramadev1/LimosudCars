@@ -230,14 +230,19 @@ class ContractPdfService
         $logoPath = public_path('images/logo.jpg');
         $logoData = is_readable($logoPath) ? base64_encode((string) file_get_contents($logoPath)) : null;
 
-        return view('pdf.contract', ContractViewData::fromReservation(
-            $reservation,
-            $contractNumber,
-            $paidAmount,
-            $remainingAmount,
-            $logoData,
-            $details,
-            $contractSeries,
+        return view('pdf.contract', array_merge(
+            ContractViewData::fromReservation(
+                $reservation,
+                $contractNumber,
+                $paidAmount,
+                $remainingAmount,
+                $logoData,
+                $details,
+                $contractSeries,
+            ),
+            [
+                'vehicleConditionImage' => ContractViewData::vehicleConditionImage(),
+            ],
         ))->render();
     }
 }

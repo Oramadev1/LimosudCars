@@ -22,6 +22,8 @@ return [
         'insurance_deductible' => (int) env('LIMOSUD_INSURANCE_DEDUCTIBLE', 5000),
     ],
 
+    'vehicle_condition_image' => env('LIMOSUD_VEHICLE_CONDITION_IMAGE', 'images/vehicle-condition-notes.jpeg'),
+
     'contract_labels_ar' => [
         'locataire' => 'المستأجر',
         'conducteur' => 'السائق الإضافي',
