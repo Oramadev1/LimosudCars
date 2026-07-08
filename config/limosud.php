@@ -24,6 +24,8 @@ return [
 
     'vehicle_condition_image' => env('LIMOSUD_VEHICLE_CONDITION_IMAGE', 'images/vehicle-condition-notes.jpeg'),
 
+    'contract_logo' => env('LIMOSUD_CONTRACT_LOGO', 'images/logo.png'),
+
     'contract_labels_ar' => [
         'locataire' => 'المستأجر',
         'conducteur' => 'السائق الإضافي',

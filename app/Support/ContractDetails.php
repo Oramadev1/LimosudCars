@@ -150,10 +150,12 @@ class ContractDetails
                 'after' => self::conditionDefaults(),
             ],
             'rental' => [
+                'dropoff_datetime' => $reservation->end_datetime?->toIso8601String(),
+                'total_days' => $reservation->total_days,
                 'actual_return_date' => '',
                 'actual_return_time' => '',
                 'extension' => '',
-                'extension_total' => '',
+                'extension_total' => number_format((float) $reservation->total_price, 0, '.', ' '),
             ],
             'payment' => [
                 'discount' => 0,

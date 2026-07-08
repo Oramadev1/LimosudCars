@@ -40,8 +40,10 @@
 <table>
     <tr>
         <td class="cell center" style="width: 16%;">
-            @if (!empty($logoData))
-                <img src="data:image/jpeg;base64,{{ $logoData }}" alt="Logo" style="height: 48px; width: auto;">
+            @if (!empty($contractLogo['data']))
+                <img src="data:{{ $contractLogo['mime'] }};base64,{{ $contractLogo['data'] }}" alt="Logo" style="height: 48px; width: auto;">
+            @elseif (!empty($logoData))
+                <img src="data:image/png;base64,{{ $logoData }}" alt="Logo" style="height: 48px; width: auto;">
             @endif
         </td>
         <td class="cell center" style="width: 44%;">
@@ -78,25 +80,6 @@
         <td class="cell" style="width: 32%;">
             <div class="fr-label">Lieu et date de reprise</div>
             <div class="value">{{ $dropoffRepriseText }}</div>
-        </td>
-    </tr>
-    <tr>
-        <td class="cell">
-            <div class="fr-label">Catégorie</div>
-            <div class="value">{{ $vehicleCategory }}</div>
-        </td>
-        <td class="cell">
-            <div class="fr-label">Couleur / Année</div>
-            <div class="value">{{ trim(($vehicleColor ?: '—').' / '.($vehicleYear ?: '—')) }}</div>
-        </td>
-        <td class="cell">
-            <div class="fr-label">Kilométrage / Carburant</div>
-            <div class="value">{{ trim(($vehicleMileage ?: '—').' km / '.($vehicleFuelLevel ?: '—')) }}</div>
-        </td>
-        <td class="cell">
-            <div class="fr-label">Boîte / Énergie / VIN</div>
-            <div class="value">{{ trim(($vehicleTransmission ?: '—').' / '.($vehicleFuelType ?: '—')) }}</div>
-            @if ($vehicleVin)<div class="tiny">VIN: {{ $vehicleVin }}</div>@endif
         </td>
     </tr>
 </table>
@@ -298,8 +281,8 @@
                         <div class="value">{{ $pricePerDay }}</div>
                     </td>
                     <td colspan="3" class="cell" style="border-top:0;">
-                        <div class="fr-label">Prix total</div>
-                        <div class="value">{{ $totalPrice }}</div>
+                        <div class="fr-label">Prix total avant prolongation</div>
+                        <div class="value">{{ $totalBeforeExtension }}</div>
                     </td>
                 </tr>
                 <tr>
@@ -309,14 +292,14 @@
                 </tr>
                 <tr>
                     <td colspan="5" class="cell" style="border-top:0;">
-                        <div class="fr-label">Prolongation</div>
-                        <div class="value">{{ $extension ?: ' ' }}</div>
+                        <div class="fr-label">Prix total après prolongation</div>
+                        <div class="value">{{ $extensionTotal ?: ' ' }}</div>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="5" class="cell" style="border-top:0;">
-                        <div class="fr-label">Prix total après prolongation</div>
-                        <div class="value">{{ $extensionTotal ?: ' ' }}</div>
+                        <div class="fr-label">Prolongation</div>
+                        <div class="value">{{ $extension ?: ' ' }}</div>
                     </td>
                 </tr>
             </table>
@@ -378,7 +361,6 @@
                     <td colspan="2" class="cell" style="border-top:0;">
                         <span class="mark">{{ $box($insuranceType === 'basic') }} Basic</span>
                         <span class="mark" style="margin-left:12px;">{{ $box($insuranceType === 'premium') }} Premium</span>
-                        <div class="tiny" style="margin-top:2px;">Franchise: {{ $deductibleFormatted }} MAD</div>
                     </td>
                 </tr>
                 <tr>

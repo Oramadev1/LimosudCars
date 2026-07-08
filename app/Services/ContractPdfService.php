@@ -227,8 +227,6 @@ class ContractPdfService
             ->where('payment_status_id', $paidStatusId)
             ->sum('amount');
         $remainingAmount = max(0, (float) $reservation->total_price - $paidAmount);
-        $logoPath = public_path('images/logo.jpg');
-        $logoData = is_readable($logoPath) ? base64_encode((string) file_get_contents($logoPath)) : null;
 
         return view('pdf.contract', array_merge(
             ContractViewData::fromReservation(
@@ -236,11 +234,12 @@ class ContractPdfService
                 $contractNumber,
                 $paidAmount,
                 $remainingAmount,
-                $logoData,
+                null,
                 $details,
                 $contractSeries,
             ),
             [
+                'contractLogo' => ContractViewData::contractLogo(),
                 'vehicleConditionImage' => ContractViewData::vehicleConditionImage(),
             ],
         ))->render();

@@ -62,7 +62,9 @@ class ContractModuleTest extends TestCase
         $this->assertStringContainsString('Locataire', $html);
         $this->assertStringContainsString('المستأجر', $html);
         $this->assertStringContainsString('conducteur supplémentaire', $html);
-        $this->assertStringContainsString('Prix total', $html);
+        $this->assertStringContainsString('Prix total avant prolongation', $html);
+        $this->assertStringContainsString('Prix total après prolongation', $html);
+        $this->assertStringContainsString('Total général', $html);
         $this->assertStringContainsString('5 000 dirhams', $html);
         $this->assertStringContainsString('Le locataire', $html);
         $this->assertStringContainsString('Le loueur', $html);
@@ -283,6 +285,55 @@ class ContractModuleTest extends TestCase
         $this->assertStringContainsString('Hay Al Qods N10', $html);
     }
 
+    public function test_generate_contract_rejects_rental_shorter_than_three_days(): void
+    {
+        Storage::fake('local');
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+
+        $this->withToken($this->adminToken())
+            ->postJson("/api/admin/reservations/{$reservation->id}/contract/generate", [
+                'details' => [
+                    'rental' => [
+                        'total_days' => 2,
+                    ],
+                ],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['details.rental.total_days']);
+    }
+
+    public function test_contract_html_uses_custom_dropoff_datetime_from_details(): void
+    {
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+        $reservation->loadMissing(['customer', 'vehicle.brand', 'vehicle.category', 'pickupLocation', 'dropoffLocation', 'payments.paymentMethod']);
+
+        $customDropoff = $reservation->start_datetime->copy()->addDays(5)->setTime(14, 30);
+        $details = [
+            'rental' => [
+                'dropoff_datetime' => $customDropoff->toIso8601String(),
+                'total_days' => 5,
+                'extension_total' => '2 500',
+            ],
+        ];
+
+        $html = $this->renderContractHtml(
+            $reservation,
+            'CTR-TEST-0002',
+            0,
+            1500,
+            null,
+            $details,
+        );
+
+        $this->assertStringContainsString($customDropoff->format('H:i'), $html);
+        $this->assertStringContainsString('Durée: 5 jour(s)', $html);
+        $this->assertStringContainsString('2 500', $html);
+    }
+
     public function test_contract_html_shows_labeled_additional_driver_fields(): void
     {
         $this->seed();
@@ -352,6 +403,7 @@ class ContractModuleTest extends TestCase
                 $contractSeries,
             ),
             [
+                'contractLogo' => \App\Support\ContractViewData::contractLogo(),
                 'vehicleConditionImage' => \App\Support\ContractViewData::vehicleConditionImage(),
             ],
         ))->render();

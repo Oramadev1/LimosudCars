@@ -39,7 +39,11 @@ class ContractViewData
         ]);
 
         $start = Carbon::parse($reservation->start_datetime);
-        $end = Carbon::parse($reservation->end_datetime);
+        $rentalDetails = $details['rental'] ?? [];
+        $end = ! empty($rentalDetails['dropoff_datetime'])
+            ? Carbon::parse($rentalDetails['dropoff_datetime'])
+            : Carbon::parse($reservation->end_datetime);
+        $rentalDurationDays = (int) ($rentalDetails['total_days'] ?? $reservation->total_days);
         $customer = $reservation->customer;
         $vehicle = $reservation->vehicle;
 
@@ -60,7 +64,9 @@ class ContractViewData
         $deductibleFormatted = number_format($deductible, 0, '.', ' ');
 
         $paymentExtras = $details['payment'];
-        $grandTotal = (float) $reservation->total_price
+        $baseTotal = (float) $reservation->total_price;
+        $afterExtension = self::parseFormattedAmount($rentalDetails['extension_total'] ?? '') ?: $baseTotal;
+        $grandTotal = $afterExtension
             + (float) ($paymentExtras['additional_fees'] ?? 0)
             + (float) ($paymentExtras['late_return_fees'] ?? 0)
             + (float) ($paymentExtras['fuel_charges'] ?? 0)
@@ -106,7 +112,7 @@ class ContractViewData
             'pickupLocation' => $reservation->pickupLocation?->name ?? '—',
             'dropoffLocation' => $reservation->dropoffLocation?->name ?? '—',
             'dropoffRepriseText' => trim(($reservation->dropoffLocation?->name ?? '—').' '.$end->format('d/m/Y H:i')),
-            'rentalDurationDays' => $reservation->total_days,
+            'rentalDurationDays' => $rentalDurationDays,
             'start' => self::dateParts($start),
             'end' => self::dateParts($end),
             'actualReturnDate' => $details['rental']['actual_return_date'] ?? '',
@@ -127,7 +133,6 @@ class ContractViewData
             'equipment' => $details['equipment'],
             'documents' => $details['documents'],
             'extension' => $details['rental']['extension'] ?? '',
-            'extensionTotal' => $details['rental']['extension_total'] ?? '',
             'insuranceType' => ContractPaymentMethods::normalizeInsuranceType($details['insurance']['type'] ?? 'basic'),
             'leaveUrbanArea' => (bool) ($details['special_authorization']['leave_urban_area'] ?? false),
             'pricePerDay' => number_format((float) $reservation->price_per_day, 0, '.', ' '),
@@ -140,7 +145,9 @@ class ContractViewData
             'cleaningCharges' => number_format((float) ($paymentExtras['cleaning_charges'] ?? 0), 0, '.', ' '),
             'damageCharges' => number_format((float) ($paymentExtras['damage_charges'] ?? 0), 0, '.', ' '),
             'taxAmount' => number_format((float) ($paymentExtras['tax'] ?? 0), 0, '.', ' '),
-            'totalPrice' => number_format((float) $reservation->total_price, 0, '.', ' '),
+            'totalPrice' => number_format($baseTotal, 0, '.', ' '),
+            'totalBeforeExtension' => number_format($baseTotal, 0, '.', ' '),
+            'extensionTotal' => $details['rental']['extension_total'] ?? number_format($baseTotal, 0, '.', ' '),
             'grandTotal' => number_format($grandTotal, 0, '.', ' '),
             'paidAmountFormatted' => number_format($paidAmount, 0, '.', ' '),
             'remainingAmountFormatted' => number_format($remainingBalance, 0, '.', ' '),
@@ -173,6 +180,33 @@ class ContractViewData
                 ['key' => 'rental_contract_copy', 'label' => 'CONTRAT'],
             ],
         ];
+    }
+
+    /**
+     * @return array{mime: string, data: string}|null
+     */
+    public static function contractLogo(): ?array
+    {
+        $configured = (string) config('limosud.contract_logo', 'images/logo.png');
+        $candidates = array_unique([
+            public_path($configured),
+            public_path('images/logo.png'),
+            public_path('images/logo.jpg'),
+            public_path('images/logo.jpeg'),
+        ]);
+
+        foreach ($candidates as $path) {
+            if (! is_readable($path)) {
+                continue;
+            }
+
+            return [
+                'mime' => mime_content_type($path) ?: 'image/png',
+                'data' => base64_encode((string) file_get_contents($path)),
+            ];
+        }
+
+        return null;
     }
 
     /**
@@ -212,5 +246,16 @@ class ContractViewData
         }
 
         return Carbon::parse($value)->format('d/m/Y');
+    }
+
+    private static function parseFormattedAmount(mixed $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        $digits = preg_replace('/[^\d]/', '', (string) $value);
+
+        return $digits !== '' ? (float) $digits : 0;
     }
 }
