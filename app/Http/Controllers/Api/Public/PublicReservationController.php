@@ -14,6 +14,7 @@ use App\Models\ReservationStatus;
 use App\Models\Vehicle;
 use App\Services\AlertService;
 use App\Services\CustomerService;
+use App\Services\NotificationMailService;
 use App\Services\ReservationPricingService;
 use App\Services\VehicleAvailabilityService;
 use Illuminate\Http\JsonResponse;
@@ -51,6 +52,7 @@ class PublicReservationController extends Controller
         ReservationPricingService $pricingService,
         CustomerService $customerService,
         AlertService $alertService,
+        NotificationMailService $notificationMailService,
     ): JsonResponse {
         $reservation = DB::transaction(function () use ($request, $availabilityService, $pricingService, $customerService): Reservation {
             $data = $request->validated();
@@ -84,6 +86,8 @@ class PublicReservationController extends Controller
         });
 
         $alertService->createReservationFollowUpAlert($reservation);
+
+        $notificationMailService->sendNewReservationReceived($reservation);
 
         return (new ReservationResource($reservation->load($this->relationships())))
             ->response()

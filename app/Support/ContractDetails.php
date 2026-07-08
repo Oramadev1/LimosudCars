@@ -250,6 +250,69 @@ class ContractDetails
                 'mileage' => isset($vehicleData['mileage']) ? (int) $vehicleData['mileage'] : null,
             ], fn ($value) => $value !== null && $value !== ''))->save();
         }
+
+        self::syncReservationRental($reservation, $details);
+    }
+
+    /**
+     * @param  array<string, mixed>  $details
+     */
+    public static function syncReservationRental(Reservation $reservation, array $details): void
+    {
+        $rentalDetails = $details['rental'] ?? [];
+        $baseDays = (int) ($rentalDetails['total_days'] ?? $reservation->total_days);
+        $extensionDays = self::parseExtensionDays($rentalDetails['extension'] ?? '');
+        $effectiveDays = max($baseDays, 1) + ($extensionDays >= 1 ? $extensionDays : 0);
+
+        $dropoffIso = $rentalDetails['dropoff_datetime'] ?? null;
+        $endAt = $dropoffIso
+            ? Carbon::parse($dropoffIso)
+            : ($reservation->end_datetime?->copy());
+
+        if ($endAt && $extensionDays >= 1) {
+            $endAt = $endAt->copy()->addDays($extensionDays);
+        }
+
+        $updates = [];
+
+        if ($effectiveDays !== (int) $reservation->total_days) {
+            $updates['total_days'] = $effectiveDays;
+        }
+
+        if ($endAt && ! $reservation->end_datetime?->equalTo($endAt)) {
+            $updates['end_datetime'] = $endAt;
+        }
+
+        $extensionTotal = self::parseFormattedAmount($rentalDetails['extension_total'] ?? '');
+        if ($extensionTotal > 0 && abs($extensionTotal - (float) $reservation->total_price) > 0.009) {
+            $updates['total_price'] = round($extensionTotal, 2);
+        }
+
+        if ($updates !== []) {
+            $reservation->update($updates);
+        }
+    }
+
+    private static function parseExtensionDays(mixed $value): int
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return 0;
+        }
+
+        $digits = preg_replace('/[^\d]/', '', (string) $value);
+
+        return $digits !== '' ? max(0, (int) $digits) : 0;
+    }
+
+    private static function parseFormattedAmount(mixed $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        $digits = preg_replace('/[^\d]/', '', (string) $value);
+
+        return $digits !== '' ? (float) $digits : 0.0;
     }
 
     private static function formatDate(mixed $value): ?string

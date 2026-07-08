@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Mail\WebsiteContactReceived;
 use App\Models\Alert;
 use App\Models\AlertStatus;
 use App\Models\AlertType;
 use App\Models\ContactMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ContactMessageModuleTest extends TestCase
@@ -15,6 +17,8 @@ class ContactMessageModuleTest extends TestCase
 
     public function test_public_contact_message_creates_record_and_pending_alert(): void
     {
+        config(['mail.default' => 'log']);
+        Mail::fake();
         $this->seed();
 
         $this->postJson('/api/public/contact-messages', [
@@ -41,6 +45,31 @@ class ContactMessageModuleTest extends TestCase
             'alert_type_id' => AlertType::where('slug', 'website_contact')->value('id'),
             'alert_status_id' => AlertStatus::where('slug', 'pending')->value('id'),
         ]);
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_public_contact_message_sends_notification_email_when_smtp_configured(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'limosud.notifications.email' => 'owner@example.com',
+            'limosud.notifications.send_contact_messages' => true,
+        ]);
+
+        Mail::fake();
+        $this->seed();
+
+        $this->postJson('/api/public/contact-messages', [
+            'name' => 'Ahmed Dakhla',
+            'email' => 'ahmed@example.com',
+            'phone' => '+212600000000',
+            'message' => 'I would like to rent a car next week.',
+        ])->assertCreated();
+
+        Mail::assertSent(WebsiteContactReceived::class, function (WebsiteContactReceived $mail): bool {
+            return $mail->hasTo('owner@example.com');
+        });
     }
 
     public function test_admin_can_list_and_mark_contact_message_as_read(): void

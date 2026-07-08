@@ -110,6 +110,34 @@ class ContractModuleTest extends TestCase
         Storage::disk('local')->assertExists($contract->pdf_path);
     }
 
+    public function test_generating_contract_with_extension_updates_reservation_days_and_price(): void
+    {
+        Storage::fake('local');
+        $this->seed();
+
+        $reservation = $this->reservation('confirmed');
+        $originalDays = $reservation->total_days;
+        $originalPrice = (float) $reservation->total_price;
+        $dailyPrice = (float) $reservation->price_per_day;
+        $extendedPrice = round($originalPrice + (2 * $dailyPrice), 2);
+
+        $this->withToken($this->adminToken())
+            ->postJson("/api/admin/reservations/{$reservation->id}/contract/generate", [
+                'details' => [
+                    'rental' => [
+                        'extension' => '2',
+                        'extension_total' => number_format($extendedPrice, 0, '.', ' '),
+                    ],
+                ],
+            ])
+            ->assertOk();
+
+        $reservation->refresh();
+
+        $this->assertSame($originalDays + 2, $reservation->total_days);
+        $this->assertSame($extendedPrice, (float) $reservation->total_price);
+    }
+
     public function test_regeneration_keeps_same_contract_number(): void
     {
         Storage::fake('local');

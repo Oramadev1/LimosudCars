@@ -7,6 +7,7 @@ use App\Http\Requests\Public\StorePublicContactMessageRequest;
 use App\Http\Resources\ContactMessageResource;
 use App\Models\ContactMessage;
 use App\Services\AlertService;
+use App\Services\NotificationMailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ class PublicContactMessageController extends Controller
     public function store(
         StorePublicContactMessageRequest $request,
         AlertService $alertService,
+        NotificationMailService $notificationMailService,
     ): JsonResponse {
         $message = DB::transaction(function () use ($request, $alertService): ContactMessage {
             $contactMessage = ContactMessage::create($request->validated());
@@ -38,6 +40,8 @@ class PublicContactMessageController extends Controller
 
             return $contactMessage;
         });
+
+        $notificationMailService->sendWebsiteContactReceived($message);
 
         return (new ContactMessageResource($message))
             ->response()

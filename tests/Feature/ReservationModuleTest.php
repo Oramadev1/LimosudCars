@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\NewReservationReceived;
 use App\Models\Alert;
 use App\Models\AlertStatus;
 use App\Models\AlertType;
@@ -15,6 +16,7 @@ use App\Models\ReservationStatus;
 use App\Models\Vehicle;
 use App\Models\VehicleStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ReservationModuleTest extends TestCase
@@ -23,6 +25,8 @@ class ReservationModuleTest extends TestCase
 
     public function test_public_reservation_creates_pending_request_without_changing_vehicle_status(): void
     {
+        config(['mail.default' => 'log']);
+        Mail::fake();
         $this->seed();
         $vehicle = $this->vehicle();
         [$pickupLocation, $dropoffLocation] = $this->locations();
@@ -60,6 +64,40 @@ class ReservationModuleTest extends TestCase
             'alert_status_id' => AlertStatus::where('slug', 'pending')->value('id'),
             'title' => 'New reservation '.$reservation->reservation_number,
         ]);
+
+        Mail::assertNothingSent();
+    }
+
+    public function test_public_reservation_sends_notification_email_when_smtp_configured(): void
+    {
+        config([
+            'mail.default' => 'smtp',
+            'limosud.notifications.email' => 'owner@example.com',
+            'limosud.notifications.send_reservations' => true,
+        ]);
+
+        Mail::fake();
+        $this->seed();
+        $vehicle = $this->vehicle();
+        [$pickupLocation, $dropoffLocation] = $this->locations();
+
+        $this->postJson('/api/public/reservations', [
+            'customer' => [
+                'full_name' => 'Ahmed Dakhla',
+                'nationality' => 'Moroccan',
+                'phone' => '+212600000101',
+                'email' => 'ahmed@example.com',
+            ],
+            'vehicle_id' => $vehicle->id,
+            'pickup_location_id' => $pickupLocation->id,
+            'dropoff_location_id' => $dropoffLocation->id,
+            'start_datetime' => now()->addDays(5)->setTime(10, 0)->toDateTimeString(),
+            'end_datetime' => now()->addDays(8)->setTime(10, 0)->toDateTimeString(),
+        ])->assertCreated();
+
+        Mail::assertSent(NewReservationReceived::class, function (NewReservationReceived $mail): bool {
+            return $mail->hasTo('owner@example.com');
+        });
     }
 
     public function test_confirming_reservation_resolves_follow_up_alert(): void

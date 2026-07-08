@@ -28,6 +28,21 @@ return [
 
     'min_rental_days' => (int) env('LIMOSUD_MIN_RENTAL_DAYS', 3),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Website notification emails (contact form, new reservations)
+    |--------------------------------------------------------------------------
+    |
+    | LIMOSUD_NOTIFICATION_EMAIL — inbox that receives alerts (e.g. your Gmail).
+    | SMTP credentials (MAIL_*) — the mailbox used to send (usually Hostinger email).
+    */
+
+    'notifications' => [
+        'email' => env('LIMOSUD_NOTIFICATION_EMAIL', env('LIMOSUD_COMPANY_EMAIL', 'Limosudcars@gmail.com')),
+        'send_contact_messages' => filter_var(env('LIMOSUD_MAIL_CONTACT', true), FILTER_VALIDATE_BOOL),
+        'send_reservations' => filter_var(env('LIMOSUD_MAIL_RESERVATIONS', true), FILTER_VALIDATE_BOOL),
+    ],
+
     'contract_labels_ar' => [
         'locataire' => 'المستأجر',
         'conducteur' => 'السائق الإضافي',
