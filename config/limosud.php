@@ -26,6 +26,8 @@ return [
 
     'contract_logo' => env('LIMOSUD_CONTRACT_LOGO', 'images/logo.png'),
 
+    'min_rental_days' => (int) env('LIMOSUD_MIN_RENTAL_DAYS', 3),
+
     'contract_labels_ar' => [
         'locataire' => 'المستأجر',
         'conducteur' => 'السائق الإضافي',

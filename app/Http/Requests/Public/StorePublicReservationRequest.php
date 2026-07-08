@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Public;
 
+use App\Http\Requests\Concerns\ValidatesMinimumRentalDays;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePublicReservationRequest extends FormRequest
 {
+    use ValidatesMinimumRentalDays;
     /**
      * Determine if the user is authorized to make this request.
      */

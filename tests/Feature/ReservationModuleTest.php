@@ -103,6 +103,28 @@ class ReservationModuleTest extends TestCase
             ->assertJsonPath('meta.total', 0);
     }
 
+    public function test_public_reservation_rejects_rental_shorter_than_minimum_days(): void
+    {
+        $this->seed();
+        $vehicle = $this->vehicle();
+        [$pickupLocation, $dropoffLocation] = $this->locations();
+
+        $this->postJson('/api/public/reservations', [
+            'customer' => [
+                'full_name' => 'Short Stay Client',
+                'nationality' => 'Moroccan',
+                'phone' => '+212600000104',
+            ],
+            'vehicle_id' => $vehicle->id,
+            'pickup_location_id' => $pickupLocation->id,
+            'dropoff_location_id' => $dropoffLocation->id,
+            'start_datetime' => now()->addDays(5)->setTime(10, 0)->toDateTimeString(),
+            'end_datetime' => now()->addDays(6)->setTime(10, 0)->toDateTimeString(),
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['end_datetime']);
+    }
+
     public function test_public_reservation_reuses_existing_customer_by_phone(): void
     {
         $this->seed();
@@ -179,7 +201,7 @@ class ReservationModuleTest extends TestCase
             'pickup_location_id' => $pickupLocation->id,
             'dropoff_location_id' => $dropoffLocation->id,
             'start_datetime' => now()->addDays(15)->setTime(9, 0)->toDateTimeString(),
-            'end_datetime' => now()->addDays(17)->setTime(9, 0)->toDateTimeString(),
+            'end_datetime' => now()->addDays(18)->setTime(9, 0)->toDateTimeString(),
             'admin_notes' => 'Manual booking.',
         ]);
 
@@ -322,7 +344,7 @@ class ReservationModuleTest extends TestCase
         $this->postJson('/api/public/reservations/check-availability', [
             'vehicle_id' => $vehicle->id,
             'start_datetime' => now()->addDays(11)->toDateTimeString(),
-            'end_datetime' => now()->addDays(12)->toDateTimeString(),
+            'end_datetime' => now()->addDays(14)->toDateTimeString(),
         ])
             ->assertOk()
             ->assertJsonPath('available', false);
@@ -337,13 +359,13 @@ class ReservationModuleTest extends TestCase
             'pickup_location_id' => $pickupLocation->id,
             'dropoff_location_id' => $dropoffLocation->id,
             'start_datetime' => now()->addDays(11)->toDateTimeString(),
-            'end_datetime' => now()->addDays(12)->toDateTimeString(),
+            'end_datetime' => now()->addDays(14)->toDateTimeString(),
         ])->assertUnprocessable();
 
         $this->postJson('/api/public/reservations/check-availability', [
             'vehicle_id' => $vehicle->id,
             'start_datetime' => now()->addDays(13)->toDateTimeString(),
-            'end_datetime' => now()->addDays(14)->toDateTimeString(),
+            'end_datetime' => now()->addDays(16)->toDateTimeString(),
         ])
             ->assertOk()
             ->assertJsonPath('available', true);
@@ -359,7 +381,7 @@ class ReservationModuleTest extends TestCase
         $this->postJson('/api/public/reservations/check-availability', [
             'vehicle_id' => $vehicle->id,
             'start_datetime' => now()->addDays(6)->toDateTimeString(),
-            'end_datetime' => now()->addDays(7)->toDateTimeString(),
+            'end_datetime' => now()->addDays(9)->toDateTimeString(),
         ])
             ->assertOk()
             ->assertJsonPath('available', false);
@@ -374,7 +396,7 @@ class ReservationModuleTest extends TestCase
             'pickup_location_id' => $pickupLocation->id,
             'dropoff_location_id' => $dropoffLocation->id,
             'start_datetime' => now()->addDays(6)->toDateTimeString(),
-            'end_datetime' => now()->addDays(7)->toDateTimeString(),
+            'end_datetime' => now()->addDays(9)->toDateTimeString(),
         ])->assertUnprocessable();
     }
 
@@ -389,7 +411,7 @@ class ReservationModuleTest extends TestCase
         $this->postJson('/api/public/reservations/check-availability', [
             'vehicle_id' => $vehicle->id,
             'start_datetime' => now()->addDays(20)->toDateTimeString(),
-            'end_datetime' => now()->addDays(22)->toDateTimeString(),
+            'end_datetime' => now()->addDays(23)->toDateTimeString(),
         ])
             ->assertOk()
             ->assertJsonPath('available', false);
