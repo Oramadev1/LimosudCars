@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\VehicleResource;
+use App\Http\Resources\PublicVehicleResource;
 use App\Models\Vehicle;
 use App\Services\VehicleAvailabilityService;
 use Carbon\Carbon;
@@ -31,7 +31,7 @@ class PublicVehicleController extends Controller
             ->latest()
             ->paginate(15);
 
-        return VehicleResource::collection($vehicles);
+        return PublicVehicleResource::collection($vehicles);
     }
 
     /**
@@ -39,7 +39,7 @@ class PublicVehicleController extends Controller
      *
      * @unauthenticated
      */
-    public function show(string $slug): VehicleResource
+    public function show(string $slug): PublicVehicleResource
     {
         $vehicle = Vehicle::query()
             ->with($this->relationships())
@@ -47,7 +47,7 @@ class PublicVehicleController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        return new VehicleResource($vehicle);
+        return new PublicVehicleResource($vehicle);
     }
 
     /**
