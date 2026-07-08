@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Alert;
 use App\Models\AlertStatus;
 use App\Models\AlertType;
-use App\Models\ContactMessage;
 use App\Models\Reservation;
 use App\Models\VehicleDocument;
 use App\Models\VehicleMaintenance;
@@ -130,51 +129,6 @@ class AlertService
                 $query->where('reservation_id', $reservation->id)
                     ->orWhere('title', $this->reservationFollowUpTitle($reservation));
             })
-            ->where('alert_status_id', $this->alertStatusId('pending'))
-            ->update([
-                'alert_status_id' => $this->alertStatusId('done'),
-            ]);
-    }
-
-    public function createContactMessageAlert(ContactMessage $contactMessage): Alert
-    {
-        return DB::transaction(function () use ($contactMessage): Alert {
-            $typeId = $this->alertTypeId('website_contact');
-
-            $existing = Alert::query()
-                ->where('contact_message_id', $contactMessage->id)
-                ->first();
-
-            if ($existing) {
-                return $existing;
-            }
-
-            $phone = $contactMessage->phone ? ' · '.$contactMessage->phone : '';
-            $preview = mb_strlen($contactMessage->message) > 140
-                ? mb_substr($contactMessage->message, 0, 140).'...'
-                : $contactMessage->message;
-
-            return Alert::create([
-                'contact_message_id' => $contactMessage->id,
-                'alert_type_id' => $typeId,
-                'alert_status_id' => $this->alertStatusId('pending'),
-                'title' => 'New website contact from '.$contactMessage->name,
-                'message' => sprintf(
-                    '%s%s — %s',
-                    $contactMessage->email,
-                    $phone,
-                    $preview
-                ),
-                'due_date' => now()->toDateString(),
-            ]);
-        });
-    }
-
-    public function resolveContactMessageAlert(ContactMessage $contactMessage): void
-    {
-        Alert::query()
-            ->where('alert_type_id', $this->alertTypeId('website_contact'))
-            ->where('contact_message_id', $contactMessage->id)
             ->where('alert_status_id', $this->alertStatusId('pending'))
             ->update([
                 'alert_status_id' => $this->alertStatusId('done'),

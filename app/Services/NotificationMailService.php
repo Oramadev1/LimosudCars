@@ -4,21 +4,21 @@ namespace App\Services;
 
 use App\Mail\NewReservationReceived;
 use App\Mail\WebsiteContactReceived;
-use App\Models\ContactMessage;
 use App\Models\Reservation;
+use App\Support\WebsiteContactData;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class NotificationMailService
 {
-    public function sendWebsiteContactReceived(ContactMessage $contactMessage): void
+    public function sendWebsiteContactReceived(WebsiteContactData $contact): void
     {
         if (! config('limosud.notifications.send_contact_messages')) {
             return;
         }
 
-        $this->sendToInbox(new WebsiteContactReceived($contactMessage));
+        $this->sendToInbox(new WebsiteContactReceived($contact));
     }
 
     public function sendNewReservationReceived(Reservation $reservation): void

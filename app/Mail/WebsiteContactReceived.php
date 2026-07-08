@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\ContactMessage;
+use App\Support\WebsiteContactData;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -15,14 +15,14 @@ class WebsiteContactReceived extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public ContactMessage $contactMessage) {}
+    public function __construct(public WebsiteContactData $contact) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New website contact — '.$this->contactMessage->name,
+            subject: 'New website contact — '.$this->contact->name,
             replyTo: [
-                new Address($this->contactMessage->email, $this->contactMessage->name),
+                new Address($this->contact->email, $this->contact->name),
             ],
         );
     }
@@ -32,7 +32,7 @@ class WebsiteContactReceived extends Mailable
         return new Content(
             markdown: 'mail.website-contact-received',
             with: [
-                'contactMessage' => $this->contactMessage,
+                'contact' => $this->contact,
             ],
         );
     }

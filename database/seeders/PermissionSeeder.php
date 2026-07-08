@@ -118,11 +118,6 @@ class PermissionSeeder extends Seeder
                 'alerts.update' => 'Update alerts',
                 'alerts.close' => 'Close alerts',
             ],
-            'contact_messages' => [
-                'contact_messages.view' => 'View contact messages',
-                'contact_messages.update' => 'Update contact messages',
-                'contact_messages.delete' => 'Delete contact messages',
-            ],
             'site_pages' => [
                 'site_pages.view' => 'View site pages',
                 'site_pages.create' => 'Create site pages',

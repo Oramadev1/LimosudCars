@@ -1,20 +1,20 @@
 <x-mail::message>
 # New website contact
 
-**Name:** {{ $contactMessage->name }}
+**Name:** {{ $contact->name }}
 
-**Email:** {{ $contactMessage->email }}
+**Email:** {{ $contact->email }}
 
-@if ($contactMessage->phone)
-**Phone:** {{ $contactMessage->phone }}
+@if ($contact->phone)
+**Phone:** {{ $contact->phone }}
 @endif
 
 **Message:**
 
-{{ $contactMessage->message }}
+{{ $contact->message }}
 
-<x-mail::button :url="'mailto:'.$contactMessage->email">
-Reply to {{ $contactMessage->name }}
+<x-mail::button :url="'mailto:'.$contact->email">
+Reply to {{ $contact->name }}
 </x-mail::button>
 
 Thanks,<br>
