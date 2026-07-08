@@ -15,7 +15,7 @@ return new class extends Migration
             $table->date('driving_license_issued_at')->nullable()->after('driving_license_number');
             $table->date('driving_license_expires_at')->nullable()->after('driving_license_issued_at');
             $table->string('driving_license_country')->nullable()->after('driving_license_expires_at');
-            $table->date('passport_or_cin_issued_at')->nullable()->after('passport_or_cin_normalized');
+            $table->date('passport_or_cin_issued_at')->nullable()->after('passport_or_cin');
         });
 
         Schema::table('vehicles', function (Blueprint $table): void {

@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\Vehicle;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 
 class StoreVehicleRequest extends FormRequest
 {
+    use GeneratesVehicleSlug;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -19,23 +19,10 @@ class StoreVehicleRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $slug = $this->input('slug');
-
-        if (! $slug && $this->filled('name')) {
-            $base = Str::slug((string) $this->input('name'));
-            $slug = $base;
-            $suffix = 2;
-
-            while (Vehicle::where('slug', $slug)->exists()) {
-                $slug = $base.'-'.$suffix;
-                $suffix++;
-            }
-        }
-
         $this->merge([
-            'slug' => $slug,
-            'year' => $this->input('year', (int) date('Y')),
-            'mileage' => $this->input('mileage', 0),
+            'slug' => $this->uniqueVehicleSlug((string) $this->input('name', 'vehicle')),
+            'year' => (int) date('Y'),
+            'mileage' => 0,
         ]);
     }
 
@@ -55,10 +42,9 @@ class StoreVehicleRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:vehicles,slug'],
             'model' => ['required', 'string', 'max:255'],
-            'year' => ['nullable', 'integer', 'min:1900', 'max:'.(((int) date('Y')) + 1)],
+            'year' => ['required', 'integer', 'min:1900', 'max:'.(((int) date('Y')) + 1)],
             'plate_number' => ['required', 'string', 'max:255', 'unique:vehicles,plate_number'],
-            'mileage' => ['nullable', 'integer', 'min:0'],
-            'current_mileage_updated_at' => ['nullable', 'date'],
+            'mileage' => ['required', 'integer', 'min:0'],
             'seats' => ['required', 'integer', 'min:1', 'max:99'],
             'doors' => ['required', 'integer', 'min:1', 'max:20'],
             'daily_price' => ['required', 'numeric', 'min:0'],

@@ -43,12 +43,8 @@ class VehicleModuleTest extends TestCase
             'transmission_type_slug' => 'manual',
             'fuel_type_slug' => 'diesel',
             'name' => 'Dacia Sandero 2024',
-            'slug' => 'dacia-sandero-2024',
             'model' => 'Sandero',
-            'year' => 2024,
             'plate_number' => '12345-A-10',
-            'mileage' => 12500,
-            'current_mileage_updated_at' => now()->toDateTimeString(),
             'seats' => 5,
             'doors' => 5,
             'daily_price' => 350,
@@ -63,6 +59,8 @@ class VehicleModuleTest extends TestCase
         $createResponse
             ->assertCreated()
             ->assertJsonPath('data.slug', 'dacia-sandero-2024')
+            ->assertJsonMissingPath('data.year')
+            ->assertJsonMissingPath('data.mileage')
             ->assertJsonPath('data.status.slug', 'available')
             ->assertJsonPath('data.transmission_type.slug', 'manual')
             ->assertJsonPath('data.fuel_type.slug', 'diesel');
@@ -103,12 +101,11 @@ class VehicleModuleTest extends TestCase
         $this->withToken($token)
             ->patchJson("/api/admin/vehicles/{$vehicle->id}", [
                 'status_slug' => 'maintenance',
-                'mileage' => 13000,
                 'is_featured' => false,
             ])
             ->assertOk()
             ->assertJsonPath('data.status.slug', 'maintenance')
-            ->assertJsonPath('data.mileage', 13000);
+            ->assertJsonMissingPath('data.mileage');
 
         $this->assertSame(VehicleStatus::where('slug', 'maintenance')->value('id'), $vehicle->refresh()->status_id);
 
