@@ -51,7 +51,7 @@ class StoreVehicleRequest extends FormRequest
             'weekly_price' => ['nullable', 'numeric', 'min:0'],
             'monthly_price' => ['nullable', 'numeric', 'min:0'],
             'deposit_amount' => ['required', 'numeric', 'min:0'],
-            'description' => ['nullable', 'string'],
+            'description' => ['nullable', 'string', 'max:5000'],
             'is_featured' => ['sometimes', 'boolean'],
             'homepage_rank' => ['nullable', 'integer', 'min:1', 'max:6'],
             'is_active' => ['sometimes', 'boolean'],

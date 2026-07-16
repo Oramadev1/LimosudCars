@@ -41,15 +41,19 @@ Route::prefix('public')->group(function (): void {
     Route::get('/vehicles/{vehicle}/availability', [PublicVehicleController::class, 'availability']);
     Route::get('/vehicles/{vehicle}/schedule', [PublicVehicleController::class, 'schedule']);
     Route::get('/vehicles/{slug}', [PublicVehicleController::class, 'show']);
-    Route::post('/reservations', [PublicReservationController::class, 'store']);
-    Route::post('/reservations/check-availability', [PublicReservationController::class, 'checkAvailability']);
-    Route::post('/contact-messages', [PublicContactMessageController::class, 'store']);
+    Route::post('/reservations', [PublicReservationController::class, 'store'])
+        ->middleware('throttle:public-forms');
+    Route::post('/reservations/check-availability', [PublicReservationController::class, 'checkAvailability'])
+        ->middleware('throttle:availability-check');
+    Route::post('/contact-messages', [PublicContactMessageController::class, 'store'])
+        ->middleware('throttle:public-forms');
     Route::get('/blog-posts', [PublicBlogPostController::class, 'index']);
     Route::get('/blog-posts/{slug}', [PublicBlogPostController::class, 'show']);
 });
 
 Route::prefix('admin')->group(function (): void {
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/login', [AuthController::class, 'login'])
+        ->middleware('throttle:api-login');
 });
 
 Route::middleware('auth:api')->prefix('admin')->group(function (): void {

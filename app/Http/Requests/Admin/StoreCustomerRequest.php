@@ -2,14 +2,18 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\SanitizesInput;
 use App\Support\IdentityDocument;
 use App\Support\PhoneNumber;
+use App\Support\ValidationRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreCustomerRequest extends FormRequest
 {
+    use SanitizesInput;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -20,6 +24,23 @@ class StoreCustomerRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->merge($this->sanitizePlainTextFields($this->all(), [
+            'full_name' => 255,
+            'nationality' => 255,
+            'phone' => 255,
+            'passport_or_cin' => 255,
+            'driving_license_number' => 255,
+            'address' => 255,
+            'foreign_address' => 255,
+            'driving_license_country' => 255,
+        ]));
+
+        if ($this->has('email')) {
+            $this->merge([
+                'email' => $this->sanitizeEmail($this->input('email')),
+            ]);
+        }
+
         if ($this->has('phone')) {
             $this->merge([
                 'phone_normalized' => PhoneNumber::normalize((string) $this->input('phone')),
@@ -41,9 +62,9 @@ class StoreCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'full_name' => ['required', 'string', 'max:255'],
-            'nationality' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:255'],
+            'full_name' => ['required', 'string', 'max:255', ValidationRules::PERSON_NAME],
+            'nationality' => ['required', 'string', 'max:255', ValidationRules::PERSON_NAME],
+            'phone' => ['required', 'string', 'max:20', ValidationRules::PHONE],
             'phone_normalized' => [
                 'required',
                 'string',
