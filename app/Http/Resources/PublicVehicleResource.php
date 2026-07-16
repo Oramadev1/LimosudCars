@@ -31,6 +31,7 @@ class PublicVehicleResource extends JsonResource
             'deposit_amount' => $this->deposit_amount,
             'description' => $this->description,
             'is_featured' => $this->is_featured,
+            'homepage_rank' => $this->homepage_rank,
             'is_active' => $this->is_active,
             'brand' => $this->whenLoaded('brand', fn (): array => [
                 'id' => $this->brand->id,

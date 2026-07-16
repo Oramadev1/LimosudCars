@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\VehicleBrandController;
 use App\Http\Controllers\Api\Admin\VehicleCategoryController;
+use App\Http\Controllers\Api\Admin\VehicleAvailabilityHoldController;
 use App\Http\Controllers\Api\Admin\VehicleController;
 use App\Http\Controllers\Api\Admin\VehiclePhotoController;
 use App\Http\Controllers\Api\LookupController;
@@ -76,11 +77,18 @@ Route::middleware('auth:api')->prefix('admin')->group(function (): void {
     Route::get('/dashboard/expenses', [DashboardController::class, 'expenses'])->middleware('permission:dashboard.view');
 
     Route::get('/vehicles', [VehicleController::class, 'index'])->middleware('permission:vehicles.view');
+    Route::get('/vehicles/homepage-slots', [VehicleController::class, 'homepageSlots'])->middleware('permission:vehicles.view');
+    Route::put('/vehicles/homepage-slots', [VehicleController::class, 'updateHomepageSlots'])->middleware('permission:vehicles.update');
     Route::post('/vehicles', [VehicleController::class, 'store'])->middleware('permission:vehicles.create');
     Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show'])->middleware('permission:vehicles.view');
     Route::put('/vehicles/{vehicle}', [VehicleController::class, 'update'])->middleware('permission:vehicles.update');
     Route::patch('/vehicles/{vehicle}', [VehicleController::class, 'update'])->middleware('permission:vehicles.update');
     Route::delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy'])->middleware('permission:vehicles.delete');
+    Route::get('/vehicles/{vehicle}/schedule', [VehicleAvailabilityHoldController::class, 'schedule'])->middleware('permission:vehicles.view');
+    Route::get('/vehicles/{vehicle}/availability-holds', [VehicleAvailabilityHoldController::class, 'index'])->middleware('permission:vehicles.view');
+    Route::post('/vehicles/{vehicle}/availability-holds', [VehicleAvailabilityHoldController::class, 'store'])->middleware('permission:vehicles.update');
+    Route::patch('/vehicles/{vehicle}/availability-holds/{hold}', [VehicleAvailabilityHoldController::class, 'update'])->middleware('permission:vehicles.update');
+    Route::delete('/vehicles/{vehicle}/availability-holds/{hold}', [VehicleAvailabilityHoldController::class, 'destroy'])->middleware('permission:vehicles.update');
     Route::get('/vehicles/{vehicle}/maintenances', [MaintenanceController::class, 'forVehicle'])->middleware('permission:maintenance.view');
     Route::get('/vehicles/{vehicle}/expenses', [ExpenseController::class, 'forVehicle'])->middleware('permission:expenses.view');
     Route::post('/vehicles/{vehicle}/photos', [VehiclePhotoController::class, 'store'])->middleware('permission:vehicles.update');

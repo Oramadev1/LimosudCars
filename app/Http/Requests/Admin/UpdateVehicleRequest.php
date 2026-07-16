@@ -43,6 +43,7 @@ class UpdateVehicleRequest extends FormRequest
             'deposit_amount' => ['sometimes', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'is_featured' => ['sometimes', 'boolean'],
+            'homepage_rank' => ['nullable', 'integer', 'min:1', 'max:6'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

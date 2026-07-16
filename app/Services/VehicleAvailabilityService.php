@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Reservation;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
-use App\Models\VehicleStatus;
+use App\Models\VehicleAvailabilityHold;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -14,7 +14,7 @@ class VehicleAvailabilityService
     /**
      * Check whether a vehicle is available for a datetime range.
      */
-    public function checkAvailability(Vehicle|int $vehicle, mixed $startDatetime, mixed $endDatetime, ?int $ignoreReservationId = null): bool
+    public function checkAvailability(Vehicle|int $vehicle, mixed $startDatetime, mixed $endDatetime, ?int $ignoreReservationId = null, ?int $ignoreHoldId = null): bool
     {
         $vehicleModel = $this->resolveVehicle($vehicle);
 
@@ -29,11 +29,11 @@ class VehicleAvailabilityService
             return false;
         }
 
-        return ! $this->hasOverlappingReservations($vehicleModel->id, $startAt, $endAt, $ignoreReservationId);
+        return ! $this->hasOverlappingBlocks($vehicleModel->id, $startAt, $endAt, $ignoreReservationId, $ignoreHoldId);
     }
 
     /**
-     * Stop writes that would overlap active reservations or use an unavailable vehicle.
+     * Stop writes that would overlap active reservations/holds or use an unavailable vehicle.
      *
      * @throws ValidationException
      */
@@ -41,7 +41,8 @@ class VehicleAvailabilityService
         Vehicle|int $vehicle,
         mixed $startDatetime,
         mixed $endDatetime,
-        ?int $ignoreReservationId = null
+        ?int $ignoreReservationId = null,
+        ?int $ignoreHoldId = null
     ): void {
         $vehicleModel = $this->resolveVehicle($vehicle);
 
@@ -72,7 +73,7 @@ class VehicleAvailabilityService
             ]);
         }
 
-        if ($this->hasOverlappingReservations($vehicleModel->id, $startAt, $endAt, $ignoreReservationId)) {
+        if ($this->hasOverlappingBlocks($vehicleModel->id, $startAt, $endAt, $ignoreReservationId, $ignoreHoldId)) {
             throw ValidationException::withMessages([
                 'vehicle_id' => 'The selected vehicle is not available for the requested period.',
             ]);
@@ -102,8 +103,8 @@ class VehicleAvailabilityService
     ): array {
         $vehicleModel = $this->resolveVehicle($vehicle);
 
-        $from ??= now();
-        $to ??= now()->addDays(90);
+        $from ??= now()->subMonth();
+        $to ??= now()->addYear();
 
         return [
             'vehicle_id' => $vehicleModel?->id ?? (is_int($vehicle) ? $vehicle : 0),
@@ -116,13 +117,14 @@ class VehicleAvailabilityService
     }
 
     /**
-     * @return array<int, array{start_datetime: string, end_datetime: string, status: string|null, reservation_number: string}>
+     * @return array<int, array<string, mixed>>
      */
     public function getBlockedPeriods(
         Vehicle|int $vehicle,
         Carbon $from,
         Carbon $to,
-        ?int $ignoreReservationId = null
+        ?int $ignoreReservationId = null,
+        ?int $ignoreHoldId = null
     ): array {
         $vehicleModel = $this->resolveVehicle($vehicle);
 
@@ -130,38 +132,71 @@ class VehicleAvailabilityService
             return [];
         }
 
-        return Reservation::query()
+        $reservations = Reservation::query()
             ->where('vehicle_id', $vehicleModel->id)
             ->whereIn('status_id', $this->blockingReservationStatusIds())
             ->when($ignoreReservationId, fn ($query) => $query->whereKeyNot($ignoreReservationId))
             ->where('start_datetime', '<', $to)
             ->where('end_datetime', '>', $from)
-            ->with('status')
+            ->with(['status', 'customer', 'source'])
             ->orderBy('start_datetime')
             ->get()
             ->map(fn (Reservation $reservation): array => [
+                'type' => 'reservation',
+                'reservation_id' => $reservation->id,
                 'start_datetime' => $reservation->start_datetime->toDateTimeString(),
                 'end_datetime' => $reservation->end_datetime->toDateTimeString(),
                 'status' => $reservation->status?->slug,
                 'reservation_number' => $reservation->reservation_number,
+                'customer_name' => $reservation->customer?->full_name,
+                'source' => $reservation->source?->slug,
+                'hold_id' => null,
             ])
             ->all();
+
+        $holds = VehicleAvailabilityHold::query()
+            ->where('vehicle_id', $vehicleModel->id)
+            ->when($ignoreHoldId, fn ($query) => $query->whereKeyNot($ignoreHoldId))
+            ->where('starts_at', '<', $to)
+            ->where('ends_at', '>', $from)
+            ->orderBy('starts_at')
+            ->get()
+            ->map(fn (VehicleAvailabilityHold $hold): array => [
+                'type' => 'hold',
+                'start_datetime' => $hold->starts_at->toDateTimeString(),
+                'end_datetime' => $hold->ends_at->toDateTimeString(),
+                'status' => 'hold',
+                'reservation_number' => null,
+                'hold_id' => $hold->id,
+                'customer_name' => $hold->customer_name,
+            ])
+            ->all();
+
+        $periods = [...$reservations, ...$holds];
+
+        usort(
+            $periods,
+            fn (array $a, array $b): int => strcmp($a['start_datetime'], $b['start_datetime'])
+        );
+
+        return $periods;
     }
 
     /**
-     * @return array<int, array{start_datetime: string, end_datetime: string, status: string|null, reservation_number: string}>
+     * @return array<int, array<string, mixed>>
      */
     public function getConflictingPeriods(
         Vehicle|int $vehicle,
         mixed $startDatetime,
         mixed $endDatetime,
-        ?int $ignoreReservationId = null
+        ?int $ignoreReservationId = null,
+        ?int $ignoreHoldId = null
     ): array {
         $startAt = Carbon::parse($startDatetime);
         $endAt = Carbon::parse($endDatetime);
 
         return array_values(array_filter(
-            $this->getBlockedPeriods($vehicle, $startAt, $endAt, $ignoreReservationId),
+            $this->getBlockedPeriods($vehicle, $startAt, $endAt, $ignoreReservationId, $ignoreHoldId),
             fn (array $period): bool => Carbon::parse($period['start_datetime'])->lt($endAt)
                 && Carbon::parse($period['end_datetime'])->gt($startAt)
         ));
@@ -176,7 +211,8 @@ class VehicleAvailabilityService
         ?Carbon $searchFrom = null,
         ?Carbon $searchTo = null,
         int $limit = 5,
-        ?int $ignoreReservationId = null
+        ?int $ignoreReservationId = null,
+        ?int $ignoreHoldId = null
     ): array {
         $vehicleModel = $this->resolveVehicle($vehicle);
 
@@ -188,21 +224,20 @@ class VehicleAvailabilityService
         $searchTo ??= now()->addDays(90);
         $durationSeconds = max($durationSeconds, 3600);
 
-        $blocked = Reservation::query()
-            ->where('vehicle_id', $vehicleModel->id)
-            ->whereIn('status_id', $this->blockingReservationStatusIds())
-            ->when($ignoreReservationId, fn ($query) => $query->whereKeyNot($ignoreReservationId))
-            ->where('end_datetime', '>', $searchFrom)
-            ->where('start_datetime', '<', $searchTo)
-            ->orderBy('start_datetime')
-            ->get(['start_datetime', 'end_datetime']);
+        $blocked = $this->getBlockedPeriods(
+            $vehicleModel,
+            $searchFrom,
+            $searchTo,
+            $ignoreReservationId,
+            $ignoreHoldId
+        );
 
         $windows = [];
         $cursor = $searchFrom->copy();
 
-        foreach ($blocked as $reservation) {
-            $blockStart = Carbon::parse($reservation->start_datetime);
-            $blockEnd = Carbon::parse($reservation->end_datetime);
+        foreach ($blocked as $period) {
+            $blockStart = Carbon::parse($period['start_datetime']);
+            $blockEnd = Carbon::parse($period['end_datetime']);
 
             if ($cursor->copy()->addSeconds($durationSeconds)->lte($blockStart)) {
                 $windows[] = [
@@ -228,6 +263,32 @@ class VehicleAvailabilityService
         }
 
         return array_slice($windows, 0, $limit);
+    }
+
+    /**
+     * Active vehicle IDs that are free for the given rental period.
+     *
+     * @return list<int>
+     */
+    public function availableVehicleIds(mixed $startDatetime, mixed $endDatetime): array
+    {
+        $startAt = Carbon::parse($startDatetime);
+        $endAt = Carbon::parse($endDatetime);
+
+        if ($endAt->lessThanOrEqualTo($startAt)) {
+            return [];
+        }
+
+        return Vehicle::query()
+            ->with('status')
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn (Vehicle $vehicle): bool => $this->vehicleIsRentable($vehicle)
+                && ! $this->hasOverlappingBlocks($vehicle->id, $startAt, $endAt))
+            ->pluck('id')
+            ->map(fn ($id): int => (int) $id)
+            ->values()
+            ->all();
     }
 
     private function resolveVehicle(Vehicle|int $vehicle): ?Vehicle
@@ -256,18 +317,30 @@ class VehicleAvailabilityService
         return in_array($slug, ['available', 'reserved', 'rented'], true);
     }
 
-    private function hasOverlappingReservations(
+    private function hasOverlappingBlocks(
         int $vehicleId,
         Carbon $startAt,
         Carbon $endAt,
-        ?int $ignoreReservationId = null
+        ?int $ignoreReservationId = null,
+        ?int $ignoreHoldId = null
     ): bool {
-        return Reservation::query()
+        $hasReservation = Reservation::query()
             ->where('vehicle_id', $vehicleId)
             ->whereIn('status_id', $this->blockingReservationStatusIds())
             ->when($ignoreReservationId, fn ($query) => $query->whereKeyNot($ignoreReservationId))
             ->where('start_datetime', '<', $endAt)
             ->where('end_datetime', '>', $startAt)
+            ->exists();
+
+        if ($hasReservation) {
+            return true;
+        }
+
+        return VehicleAvailabilityHold::query()
+            ->where('vehicle_id', $vehicleId)
+            ->when($ignoreHoldId, fn ($query) => $query->whereKeyNot($ignoreHoldId))
+            ->where('starts_at', '<', $endAt)
+            ->where('ends_at', '>', $startAt)
             ->exists();
     }
 

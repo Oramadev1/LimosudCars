@@ -13,7 +13,6 @@ use App\Models\Reservation;
 use App\Models\ReservationSource;
 use App\Models\ReservationStatus;
 use App\Models\Vehicle;
-use App\Models\VehicleStatus;
 use App\Services\AlertService;
 use App\Services\PaymentService;
 use App\Services\ReservationPricingService;
@@ -194,10 +193,6 @@ class ReservationController extends Controller
                 'confirmed_at' => now(),
             ]);
 
-            $vehicle->update([
-                'status_id' => $this->vehicleStatusId('reserved'),
-            ]);
-
             return $reservation;
         });
 
@@ -215,17 +210,12 @@ class ReservationController extends Controller
     {
         $reservation = DB::transaction(function () use ($reservation): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
-            $vehicle = Vehicle::whereKey($reservation->vehicle_id)->lockForUpdate()->firstOrFail();
 
             $this->ensureStatus($reservation, ['confirmed']);
 
             $reservation->update([
                 'status_id' => $this->reservationStatusId('in_progress'),
                 'started_at' => now(),
-            ]);
-
-            $vehicle->update([
-                'status_id' => $this->vehicleStatusId('rented'),
             ]);
 
             return $reservation;
@@ -243,17 +233,12 @@ class ReservationController extends Controller
     {
         $reservation = DB::transaction(function () use ($reservation): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
-            $vehicle = Vehicle::whereKey($reservation->vehicle_id)->lockForUpdate()->firstOrFail();
 
             $this->ensureStatus($reservation, ['in_progress']);
 
             $reservation->update([
                 'status_id' => $this->reservationStatusId('completed'),
                 'completed_at' => now(),
-            ]);
-
-            $vehicle->update([
-                'status_id' => $this->vehicleStatusId('available'),
             ]);
 
             return $reservation;
@@ -273,7 +258,6 @@ class ReservationController extends Controller
 
         $reservation = DB::transaction(function () use ($reservation): Reservation {
             $reservation = Reservation::whereKey($reservation->id)->lockForUpdate()->firstOrFail();
-            $vehicle = Vehicle::whereKey($reservation->vehicle_id)->lockForUpdate()->firstOrFail();
 
             $this->ensureNotStatus($reservation, ['completed', 'cancelled', 'rejected']);
 
@@ -281,12 +265,6 @@ class ReservationController extends Controller
                 'status_id' => $this->reservationStatusId('cancelled'),
                 'cancelled_at' => now(),
             ]);
-
-            if ($reservation->wasChanged('status_id') && in_array($vehicle->status?->slug, ['reserved', 'rented'], true)) {
-                $vehicle->update([
-                    'status_id' => $this->vehicleStatusId('available'),
-                ]);
-            }
 
             return $reservation;
         });
@@ -369,13 +347,15 @@ class ReservationController extends Controller
         $startAt = Carbon::parse($data['start_datetime']);
         $endAt = Carbon::parse($data['end_datetime']);
         $ignoreReservationId = $data['ignore_reservation_id'] ?? null;
+        $ignoreHoldId = $data['ignore_hold_id'] ?? null;
         $durationSeconds = max($startAt->diffInSeconds($endAt), 3600);
 
         $available = $availabilityService->checkAvailability(
             $vehicleId,
             $data['start_datetime'],
             $data['end_datetime'],
-            $ignoreReservationId
+            $ignoreReservationId,
+            $ignoreHoldId
         );
 
         $schedule = $availabilityService->vehicleSchedule(
@@ -396,7 +376,8 @@ class ReservationController extends Controller
                     $vehicleId,
                     $data['start_datetime'],
                     $data['end_datetime'],
-                    $ignoreReservationId
+                    $ignoreReservationId,
+                    $ignoreHoldId
                 ),
             'suggested_periods' => $available
                 ? []
@@ -406,7 +387,8 @@ class ReservationController extends Controller
                     now(),
                     now()->addDays(90),
                     5,
-                    $ignoreReservationId
+                    $ignoreReservationId,
+                    $ignoreHoldId
                 ),
         ]);
     }
@@ -430,8 +412,8 @@ class ReservationController extends Controller
             'ignore_reservation_id' => ['nullable', 'integer', 'exists:reservations,id'],
         ]);
 
-        $from = isset($data['from']) ? Carbon::parse($data['from']) : now();
-        $to = isset($data['to']) ? Carbon::parse($data['to']) : now()->addDays(90);
+        $from = isset($data['from']) ? Carbon::parse($data['from']) : now()->subMonth();
+        $to = isset($data['to']) ? Carbon::parse($data['to']) : now()->addYear();
 
         return response()->json(
             $availabilityService->vehicleSchedule(
@@ -497,11 +479,6 @@ class ReservationController extends Controller
     private function paymentStatusId(string $slug): int
     {
         return PaymentStatus::where('slug', $slug)->firstOrFail()->id;
-    }
-
-    private function vehicleStatusId(string $slug): int
-    {
-        return VehicleStatus::where('slug', $slug)->firstOrFail()->id;
     }
 
     /**

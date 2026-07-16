@@ -28,7 +28,7 @@ class StorePublicReservationRequest extends FormRequest
             'customer.full_name' => ['required', 'string', 'max:255'],
             'customer.nationality' => ['required', 'string', 'max:255'],
             'customer.phone' => ['required', 'string', 'max:255'],
-            'customer.email' => ['nullable', 'email', 'max:255'],
+            'customer.email' => ['required', 'email', 'max:255'],
             'customer.passport_or_cin' => ['nullable', 'string', 'max:255'],
             'customer.driving_license_number' => ['nullable', 'string', 'max:255'],
             'vehicle_id' => ['required', 'integer', 'exists:vehicles,id'],

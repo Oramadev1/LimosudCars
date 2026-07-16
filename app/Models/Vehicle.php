@@ -43,6 +43,7 @@ class Vehicle extends Model
         'deposit_amount',
         'description',
         'is_featured',
+        'homepage_rank',
         'is_active',
     ];
 
@@ -64,8 +65,17 @@ class Vehicle extends Model
             'monthly_price' => 'decimal:2',
             'deposit_amount' => 'decimal:2',
             'is_featured' => 'boolean',
+            'homepage_rank' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<VehicleAvailabilityHold, $this>
+     */
+    public function availabilityHolds(): HasMany
+    {
+        return $this->hasMany(VehicleAvailabilityHold::class);
     }
 
     /**

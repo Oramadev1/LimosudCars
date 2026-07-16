@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\NewReservationReceived;
+use App\Mail\ReservationConfirmationToCustomer;
 use App\Models\Alert;
 use App\Models\AlertStatus;
 use App\Models\AlertType;
@@ -98,6 +99,13 @@ class ReservationModuleTest extends TestCase
         Mail::assertSent(NewReservationReceived::class, function (NewReservationReceived $mail): bool {
             return $mail->hasTo('owner@example.com');
         });
+
+        Mail::assertSent(
+            ReservationConfirmationToCustomer::class,
+            function (ReservationConfirmationToCustomer $mail): bool {
+                return $mail->hasTo('ahmed@example.com');
+            }
+        );
     }
 
     public function test_confirming_reservation_resolves_follow_up_alert(): void
@@ -111,6 +119,7 @@ class ReservationModuleTest extends TestCase
                 'full_name' => 'Sara Alert',
                 'nationality' => 'Moroccan',
                 'phone' => '+212600000202',
+                'email' => 'sara@example.com',
             ],
             'vehicle_id' => $vehicle->id,
             'pickup_location_id' => $pickupLocation->id,
@@ -152,6 +161,7 @@ class ReservationModuleTest extends TestCase
                 'full_name' => 'Short Stay Client',
                 'nationality' => 'Moroccan',
                 'phone' => '+212600000104',
+                'email' => 'short@example.com',
             ],
             'vehicle_id' => $vehicle->id,
             'pickup_location_id' => $pickupLocation->id,
@@ -212,6 +222,7 @@ class ReservationModuleTest extends TestCase
                 'full_name' => 'Ayoub',
                 'nationality' => 'Moroccan',
                 'phone' => '0622222222',
+                'email' => 'ayoub.passport@example.com',
                 'passport_or_cin' => 'AA 123-456',
             ],
             'vehicle_id' => $vehicle->id,
@@ -267,7 +278,7 @@ class ReservationModuleTest extends TestCase
             ->assertJsonPath('data.status.slug', 'confirmed');
 
         $this->assertNotNull($reservation->refresh()->confirmed_at);
-        $this->assertSame(VehicleStatus::where('slug', 'reserved')->value('id'), $vehicle->refresh()->status_id);
+        $this->assertSame(VehicleStatus::where('slug', 'available')->value('id'), $vehicle->refresh()->status_id);
 
         $this->withToken($token)
             ->postJson("/api/admin/reservations/{$reservation->id}/start")
@@ -275,7 +286,7 @@ class ReservationModuleTest extends TestCase
             ->assertJsonPath('data.status.slug', 'in_progress');
 
         $this->assertNotNull($reservation->refresh()->started_at);
-        $this->assertSame(VehicleStatus::where('slug', 'rented')->value('id'), $vehicle->refresh()->status_id);
+        $this->assertSame(VehicleStatus::where('slug', 'available')->value('id'), $vehicle->refresh()->status_id);
 
         $this->withToken($token)
             ->postJson("/api/admin/reservations/{$reservation->id}/complete")
@@ -301,7 +312,8 @@ class ReservationModuleTest extends TestCase
             ->assertJsonPath('data.status.slug', 'cancelled');
 
         $this->assertNotNull($confirmedReservation->refresh()->cancelled_at);
-        $this->assertSame(VehicleStatus::where('slug', 'available')->value('id'), $confirmedVehicle->refresh()->status_id);
+        // Cancel no longer auto-changes vehicle status; admin/calendar sync owns that.
+        $this->assertSame(VehicleStatus::where('slug', 'reserved')->value('id'), $confirmedVehicle->refresh()->status_id);
 
         $pendingReservation = $this->reservation($this->vehicle('reject-flow-car'), 'pending');
 
@@ -360,6 +372,13 @@ class ReservationModuleTest extends TestCase
             ->assertJsonPath('blocked_periods.0.reservation_number', $existing->reservation_number);
 
         $this->withToken($token)
+            ->getJson('/api/admin/vehicles/'.$vehicle->id.'/schedule')
+            ->assertOk()
+            ->assertJsonCount(1, 'blocked_periods')
+            ->assertJsonPath('blocked_periods.0.type', 'reservation')
+            ->assertJsonPath('blocked_periods.0.reservation_number', $existing->reservation_number);
+
+        $this->withToken($token)
             ->postJson('/api/admin/reservations/check-availability', [
                 'vehicle_id' => $vehicle->id,
                 'start_datetime' => now()->addDays(11)->setTime(10, 0)->toDateTimeString(),
@@ -370,6 +389,39 @@ class ReservationModuleTest extends TestCase
             ->assertJsonCount(1, 'conflicting_periods')
             ->assertJsonPath('conflicting_periods.0.reservation_number', $existing->reservation_number)
             ->assertJson(fn ($json) => $json->has('suggested_periods')->etc());
+    }
+
+    public function test_pending_website_reservation_appears_on_vehicle_schedule(): void
+    {
+        $this->seed();
+        $token = $this->adminToken();
+        $vehicle = $this->vehicle('website-schedule-car');
+        [$pickupLocation, $dropoffLocation] = $this->locations();
+
+        $this->postJson('/api/public/reservations', [
+            'customer' => [
+                'full_name' => 'Website Calendar Client',
+                'nationality' => 'Moroccan',
+                'phone' => '+212600000505',
+                'email' => 'website.calendar@example.com',
+            ],
+            'vehicle_id' => $vehicle->id,
+            'pickup_location_id' => $pickupLocation->id,
+            'dropoff_location_id' => $dropoffLocation->id,
+            'start_datetime' => now()->addDays(7)->setTime(10, 0)->toDateTimeString(),
+            'end_datetime' => now()->addDays(10)->setTime(10, 0)->toDateTimeString(),
+        ])->assertCreated();
+
+        $reservation = Reservation::firstOrFail();
+
+        $this->withToken($token)
+            ->getJson('/api/admin/vehicles/'.$vehicle->id.'/schedule')
+            ->assertOk()
+            ->assertJsonPath('blocked_periods.0.type', 'reservation')
+            ->assertJsonPath('blocked_periods.0.reservation_number', $reservation->reservation_number)
+            ->assertJsonPath('blocked_periods.0.customer_name', 'Website Calendar Client')
+            ->assertJsonPath('blocked_periods.0.source', 'website')
+            ->assertJsonPath('blocked_periods.0.status', 'pending');
     }
 
     public function test_overlap_prevention_blocks_active_reservation_conflicts(): void
@@ -392,6 +444,7 @@ class ReservationModuleTest extends TestCase
                 'full_name' => 'Overlap Client',
                 'nationality' => 'Moroccan',
                 'phone' => '+212600000102',
+                'email' => 'overlap@example.com',
             ],
             'vehicle_id' => $vehicle->id,
             'pickup_location_id' => $pickupLocation->id,
@@ -429,6 +482,7 @@ class ReservationModuleTest extends TestCase
                 'full_name' => 'Pending Overlap Client',
                 'nationality' => 'Moroccan',
                 'phone' => '+212600000103',
+                'email' => 'pending.overlap@example.com',
             ],
             'vehicle_id' => $vehicle->id,
             'pickup_location_id' => $pickupLocation->id,

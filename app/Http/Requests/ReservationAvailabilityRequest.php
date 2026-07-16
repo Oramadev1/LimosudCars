@@ -27,6 +27,7 @@ class ReservationAvailabilityRequest extends FormRequest
             'start_datetime' => ['required', 'date'],
             'end_datetime' => ['required', 'date', 'after:start_datetime'],
             'ignore_reservation_id' => ['nullable', 'integer', 'exists:reservations,id'],
+            'ignore_hold_id' => ['nullable', 'integer', 'exists:vehicle_availability_holds,id'],
         ];
     }
 }

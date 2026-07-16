@@ -192,4 +192,39 @@ class VehicleModuleTest extends TestCase
         $this->assertNull($brand->refresh()->image_path);
     }
 
+    public function test_admin_can_read_and_update_homepage_slots(): void
+    {
+        $this->seed();
+
+        $token = $this->adminToken();
+        $first = Vehicle::factory()->create(['slug' => 'homepage-slot-a', 'plate_number' => 'HPA-001', 'is_active' => true]);
+        $second = Vehicle::factory()->create(['slug' => 'homepage-slot-b', 'plate_number' => 'HPB-002', 'is_active' => true]);
+        $third = Vehicle::factory()->create(['slug' => 'homepage-slot-c', 'plate_number' => 'HPC-003', 'is_active' => true]);
+
+        $first->update(['homepage_rank' => 1]);
+        $second->update(['homepage_rank' => 2]);
+
+        $this->withToken($token)
+            ->getJson('/api/admin/vehicles/homepage-slots')
+            ->assertOk()
+            ->assertJsonPath('slots.0.rank', 1)
+            ->assertJsonPath('slots.0.vehicle_id', $first->id)
+            ->assertJsonPath('slots.1.rank', 2)
+            ->assertJsonPath('slots.1.vehicle_id', $second->id)
+            ->assertJsonPath('slots.2.vehicle_id', null);
+
+        $this->withToken($token)
+            ->putJson('/api/admin/vehicles/homepage-slots', [
+                'vehicle_ids' => [$third->id, $first->id, null, null, null, $second->id],
+            ])
+            ->assertOk()
+            ->assertJsonPath('slots.0.vehicle_id', $third->id)
+            ->assertJsonPath('slots.1.vehicle_id', $first->id)
+            ->assertJsonPath('slots.5.vehicle_id', $second->id);
+
+        $this->assertSame(1, $third->refresh()->homepage_rank);
+        $this->assertSame(2, $first->refresh()->homepage_rank);
+        $this->assertSame(6, $second->refresh()->homepage_rank);
+    }
+
 }

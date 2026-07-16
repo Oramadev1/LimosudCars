@@ -21,13 +21,36 @@ class PublicVehicleController extends Controller
     /**
      * List active vehicles for the public website.
      *
+     * Optional `start_datetime` + `end_datetime` return only cars free for that period.
+     *
      * @unauthenticated
+     *
+     * @queryParam start_datetime string optional Rental start. Example: 2026-07-01 10:00:00
+     * @queryParam end_datetime string optional Rental end. Example: 2026-07-05 10:00:00
      */
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request, VehicleAvailabilityService $availabilityService): AnonymousResourceCollection
     {
-        $vehicles = Vehicle::query()
+        $data = $request->validate([
+            'start_datetime' => ['nullable', 'date'],
+            'end_datetime' => ['nullable', 'date', 'after:start_datetime', 'required_with:start_datetime'],
+        ]);
+
+        $query = Vehicle::query()
             ->with($this->relationships())
-            ->where('is_active', true)
+            ->where('is_active', true);
+
+        if (! empty($data['start_datetime']) && ! empty($data['end_datetime'])) {
+            $availableIds = $availabilityService->availableVehicleIds(
+                $data['start_datetime'],
+                $data['end_datetime']
+            );
+
+            $query->whereIn('id', $availableIds ?: [0]);
+        }
+
+        $vehicles = $query
+            ->orderByRaw('homepage_rank IS NULL')
+            ->orderBy('homepage_rank')
             ->latest()
             ->paginate(15);
 

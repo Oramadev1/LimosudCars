@@ -53,6 +53,7 @@ class StoreVehicleRequest extends FormRequest
             'deposit_amount' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'is_featured' => ['sometimes', 'boolean'],
+            'homepage_rank' => ['nullable', 'integer', 'min:1', 'max:6'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

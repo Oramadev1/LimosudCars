@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreVehicleRequest;
+use App\Http\Requests\Admin\UpdateHomepageSlotsRequest;
 use App\Http\Requests\Admin\UpdateVehicleRequest;
 use App\Http\Resources\VehicleResource;
 use App\Models\FuelType;
@@ -38,6 +39,64 @@ class VehicleController extends Controller
     }
 
     /**
+     * Homepage slot configuration for the public site (positions 1–6).
+     *
+     * Requires permission: `vehicles.view`.
+     */
+    public function homepageSlots(): JsonResponse
+    {
+        $vehicles = Vehicle::query()
+            ->with(['brand', 'photos'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $ranked = $vehicles->keyBy('homepage_rank');
+        $slots = [];
+
+        for ($rank = 1; $rank <= 6; $rank++) {
+            $vehicle = $ranked->get($rank);
+            $slots[] = [
+                'rank' => $rank,
+                'vehicle_id' => $vehicle?->id,
+            ];
+        }
+
+        return response()->json([
+            'slots' => $slots,
+            'vehicles' => VehicleResource::collection($vehicles),
+        ]);
+    }
+
+    /**
+     * Update all homepage slots in one request.
+     *
+     * Requires permission: `vehicles.update`.
+     *
+     * @bodyParam vehicle_ids array required Six entries (rank 1–6). Use null for empty slots. Example: [1, 5, 3, null, null, null]
+     */
+    public function updateHomepageSlots(UpdateHomepageSlotsRequest $request): JsonResponse
+    {
+        $vehicleIds = $request->validated('vehicle_ids');
+
+        DB::transaction(function () use ($vehicleIds): void {
+            Vehicle::query()->update(['homepage_rank' => null]);
+
+            foreach ($vehicleIds as $index => $vehicleId) {
+                if ($vehicleId === null) {
+                    continue;
+                }
+
+                Vehicle::whereKey($vehicleId)->update([
+                    'homepage_rank' => $index + 1,
+                ]);
+            }
+        });
+
+        return $this->homepageSlots();
+    }
+
+    /**
      * Store a new vehicle.
      *
      * Requires permission: `vehicles.create`.
@@ -68,6 +127,12 @@ class VehicleController extends Controller
     {
         $vehicle = DB::transaction(function () use ($request): Vehicle {
             $data = $this->prepareVehicleData($request->validated());
+
+            if (array_key_exists('homepage_rank', $data) && $data['homepage_rank'] !== null) {
+                Vehicle::query()
+                    ->where('homepage_rank', $data['homepage_rank'])
+                    ->update(['homepage_rank' => null]);
+            }
 
             return Vehicle::create($data);
         });
@@ -108,7 +173,16 @@ class VehicleController extends Controller
     public function update(UpdateVehicleRequest $request, Vehicle $vehicle): VehicleResource
     {
         DB::transaction(function () use ($request, $vehicle): void {
-            $vehicle->update($this->prepareVehicleData($request->validated()));
+            $data = $this->prepareVehicleData($request->validated());
+
+            if (array_key_exists('homepage_rank', $data) && $data['homepage_rank'] !== null) {
+                Vehicle::query()
+                    ->where('homepage_rank', $data['homepage_rank'])
+                    ->whereKeyNot($vehicle->id)
+                    ->update(['homepage_rank' => null]);
+            }
+
+            $vehicle->update($data);
         });
 
         return new VehicleResource($vehicle->load([

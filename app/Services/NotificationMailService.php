@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Mail\NewReservationReceived;
+use App\Mail\ReservationConfirmationToCustomer;
 use App\Mail\WebsiteContactReceived;
 use App\Models\Reservation;
 use App\Support\WebsiteContactData;
@@ -35,6 +36,46 @@ class NotificationMailService
         ]);
 
         $this->sendToInbox(new NewReservationReceived($reservation));
+        $this->sendReservationConfirmationToCustomer($reservation);
+    }
+
+    public function sendReservationConfirmationToCustomer(Reservation $reservation): void
+    {
+        if (! config('limosud.notifications.send_reservations')) {
+            return;
+        }
+
+        $reservation->loadMissing([
+            'customer',
+            'vehicle',
+            'pickupLocation',
+            'dropoffLocation',
+        ]);
+
+        $email = trim((string) ($reservation->customer?->email ?? ''));
+
+        if ($email === '') {
+            return;
+        }
+
+        if (config('mail.default') === 'log') {
+            Log::info('Skipping customer reservation confirmation because MAIL_MAILER=log.', [
+                'recipient' => $email,
+                'reservation' => $reservation->reservation_number,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($email)->send(new ReservationConfirmationToCustomer($reservation));
+        } catch (Throwable $exception) {
+            Log::error('Failed to send customer reservation confirmation email.', [
+                'recipient' => $email,
+                'reservation' => $reservation->reservation_number,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 
     private function sendToInbox(object $mailable): void
