@@ -11,26 +11,6 @@ class ContractDetails
     /**
      * @return array<string, mixed>
      */
-    public static function equipmentDefaults(): array
-    {
-        return [
-            'jack' => false,
-            'wheel_wrench' => false,
-            'spare_key' => false,
-            'warning_triangle' => false,
-            'fire_extinguisher' => false,
-            'spare_wheel' => false,
-            'first_aid_kit' => false,
-            'gps' => false,
-            'phone_charger' => false,
-            'child_seat' => false,
-            'other_accessories' => false,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
     public static function documentDefaults(): array
     {
         return [
@@ -143,7 +123,6 @@ class ContractDetails
                 'nationality' => '',
                 'phone' => '',
             ],
-            'equipment' => self::equipmentDefaults(),
             'documents' => self::documentDefaults(),
             'condition' => [
                 'before' => self::conditionDefaults(),

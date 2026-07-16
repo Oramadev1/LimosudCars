@@ -269,7 +269,7 @@ class ContractModuleTest extends TestCase
             ->assertJsonStructure([
                 'data' => [
                     'auto' => ['customer', 'vehicle', 'rental', 'payment'],
-                    'details' => ['customer', 'vehicle', 'equipment', 'documents'],
+                    'details' => ['customer', 'vehicle', 'documents'],
                     'missing_fields',
                 ],
             ]);
@@ -287,7 +287,6 @@ class ContractModuleTest extends TestCase
                 'contract_series' => 'B',
                 'details' => [
                     'customer' => ['address' => 'Hay Al Qods N10'],
-                    'equipment' => ['jack' => true, 'warning_triangle' => true],
                     'insurance' => ['type' => 'premium', 'deductible' => 4000],
                 ],
             ])
@@ -297,7 +296,7 @@ class ContractModuleTest extends TestCase
         $contract = Contract::firstOrFail();
         $this->assertSame('B', $contract->contract_series);
         $this->assertSame('Hay Al Qods N10', $contract->details['customer']['address']);
-        $this->assertTrue($contract->details['equipment']['jack']);
+        $this->assertSame('premium', $contract->details['insurance']['type']);
 
         $reservation->loadMissing(['customer', 'vehicle.brand', 'vehicle.category', 'pickupLocation', 'dropoffLocation', 'payments.paymentMethod']);
         $html = $this->renderContractHtml(

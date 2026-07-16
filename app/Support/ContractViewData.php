@@ -130,7 +130,6 @@ class ContractViewData
             'customerLicenseCountry' => $customerDetails['license_country'] ?? $customer->driving_license_country,
             'customerForeignAddress' => $customerDetails['foreign_address'] ?? $customer->foreign_address,
             'additionalDriver' => $additionalDriver,
-            'equipment' => $details['equipment'],
             'documents' => $details['documents'],
             'extension' => $details['rental']['extension'] ?? '',
             'insuranceType' => ContractPaymentMethods::normalizeInsuranceType($details['insurance']['type'] ?? 'basic'),
@@ -155,20 +154,6 @@ class ContractViewData
             'scheduledPaymentDate' => self::displayDate($paymentExtras['scheduled_payment_date'] ?? null),
             'deductibleFormatted' => $deductibleFormatted,
             'contractDate' => now()->format('d/m/Y'),
-            'equipmentItems' => [
-                ['key' => 'jack', 'label' => 'Cric'],
-                ['key' => 'wheel_wrench', 'label' => 'Manivelle'],
-                ['key' => 'spare_key', 'label' => 'Clé-roue'],
-                ['key' => 'warning_triangle', 'label' => 'Triangle'],
-                ['key' => 'fire_extinguisher', 'label' => 'Extincteur'],
-            ],
-            'extraEquipmentItems' => [
-                ['key' => 'spare_wheel', 'label' => 'Roue secours'],
-                ['key' => 'first_aid_kit', 'label' => 'Trousse secours'],
-                ['key' => 'gps', 'label' => 'GPS'],
-                ['key' => 'phone_charger', 'label' => 'Chargeur'],
-                ['key' => 'child_seat', 'label' => 'Siège enfant'],
-            ],
             'documentItems' => [
                 ['key' => 'ww', 'label' => 'WW'],
                 ['key' => 'registration_card', 'label' => 'C.GRISE'],

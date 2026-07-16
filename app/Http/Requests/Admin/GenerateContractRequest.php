@@ -46,7 +46,6 @@ class GenerateContractRequest extends FormRequest
             'details.additional_driver.license_expires_at' => ['nullable', 'date'],
             'details.additional_driver.nationality' => ['nullable', 'string', 'max:255'],
             'details.additional_driver.phone' => ['nullable', 'string', 'max:255'],
-            'details.equipment' => ['nullable', 'array'],
             'details.documents' => ['nullable', 'array'],
             'details.condition' => ['nullable', 'array'],
             'details.rental' => ['nullable', 'array'],

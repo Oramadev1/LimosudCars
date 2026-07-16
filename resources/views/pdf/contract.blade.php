@@ -214,30 +214,9 @@
             <table width="100%">
                 <tr>
                     <td colspan="3" class="section-head cell">
-                        @include('pdf.partials.bilingual-head', ['fr' => 'Équipement', 'ar' => $ar['equipement']])
+                        @include('pdf.partials.bilingual-head', ['fr' => 'Autorisation spéciale', 'ar' => $ar['sortie_ville']])
                     </td>
                 </tr>
-                <tr class="center tiny">
-                    <td class="cell" style="border-top:0;"></td>
-                    <td class="cell" style="border-top:0;">OUI</td>
-                    <td class="cell" style="border-top:0;">NON</td>
-                </tr>
-                @foreach ($equipmentItems as $item)
-                    @php $checked = (bool) ($equipment[$item['key']] ?? false); @endphp
-                    <tr>
-                        <td class="cell" style="border-top:0;">{{ $item['label'] }}</td>
-                        <td class="cell center mark" style="border-top:0;">{{ $box($checked) }}</td>
-                        <td class="cell center mark" style="border-top:0;">{{ $box(!$checked) }}</td>
-                    </tr>
-                @endforeach
-                @foreach ($extraEquipmentItems as $item)
-                    @php $checked = (bool) ($equipment[$item['key']] ?? false); @endphp
-                    <tr>
-                        <td class="cell tiny" style="border-top:0;">{{ $item['label'] }}</td>
-                        <td class="cell center mark" style="border-top:0;">{{ $box($checked) }}</td>
-                        <td class="cell center mark" style="border-top:0;">{{ $box(!$checked) }}</td>
-                    </tr>
-                @endforeach
                 <tr>
                     <td colspan="3" class="cell tiny" style="border-top:0;">
                         Permettant la sortie de la voiture à l'extérieur de l'orbite urbaine
