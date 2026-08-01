@@ -7,7 +7,6 @@ use App\Http\Requests\Admin\LoginRequest;
 use App\Http\Requests\Admin\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use App\Support\AdminAuthCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,12 +15,12 @@ use Illuminate\Validation\ValidationException;
 /**
  * @group Admin Auth
  *
- * JWT in an HttpOnly cookie (not Sanctum bearer tokens).
+ * JWT Bearer token authentication for the admin dashboard.
  */
 class AuthController extends Controller
 {
     /**
-     * Authenticate an admin user and set an HttpOnly JWT cookie.
+     * Authenticate an admin user and return a Bearer JWT.
      *
      * @unauthenticated
      *
@@ -48,19 +47,23 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->load('roles.permissions');
+        $user->load(['roles.permissions', 'permissions']);
 
         $ttlMinutes = (int) config('jwt.ttl', 1440);
 
-        return response()
-            ->json([
-                'message' => 'Login successful',
-                'expires_in_minutes' => $ttlMinutes,
-                'user' => new UserResource($user),
-            ])
-            ->withCookie(AdminAuthCookie::attach($token));
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'expires_in_minutes' => $ttlMinutes,
+            'user' => (new UserResource($user))->resolve(),
+        ]);
     }
 
+    /**
+     * Return the authenticated admin user with roles and permissions.
+     *
+     * Requires Authorization: Bearer {token}.
+     */
     public function me(Request $request): UserResource
     {
         /** @var User $user */
@@ -69,6 +72,11 @@ class AuthController extends Controller
         return new UserResource($user->load(['roles.permissions', 'permissions']));
     }
 
+    /**
+     * Update the authenticated admin user's profile.
+     *
+     * Requires Authorization: Bearer {token}.
+     */
     public function updateProfile(UpdateProfileRequest $request): UserResource
     {
         /** @var User $user */
@@ -87,14 +95,17 @@ class AuthController extends Controller
         return new UserResource($user->load(['roles.permissions', 'permissions']));
     }
 
-    public function logout(Request $request): JsonResponse
+    /**
+     * Invalidate the current JWT.
+     *
+     * Requires Authorization: Bearer {token}.
+     */
+    public function logout(): JsonResponse
     {
         Auth::guard('api')->logout();
 
-        return response()
-            ->json([
-                'message' => 'Logged out successfully.',
-            ])
-            ->withCookie(AdminAuthCookie::forget());
+        return response()->json([
+            'message' => 'Logged out successfully.',
+        ]);
     }
 }

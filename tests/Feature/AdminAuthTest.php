@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Support\AdminAuthCookie;
 use Database\Seeders\AdminUserSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RolePermissionSeeder;
@@ -29,6 +28,9 @@ class AdminAuthTest extends TestCase
         $loginResponse
             ->assertOk()
             ->assertJsonStructure([
+                'access_token',
+                'token_type',
+                'expires_in_minutes',
                 'user' => [
                     'id',
                     'name',
@@ -37,12 +39,13 @@ class AdminAuthTest extends TestCase
                     'permissions',
                 ],
             ])
+            ->assertJsonPath('token_type', 'Bearer')
             ->assertJsonPath('user.email', 'admin@limosudcars.local')
-            ->assertCookie(AdminAuthCookie::name());
+            ->assertCookieMissing((string) config('jwt.cookie_key_name', 'limosud_admin_token'));
 
-        $token = (string) $loginResponse->getCookie(AdminAuthCookie::name(), false)->getValue();
+        $token = (string) $loginResponse->json('access_token');
 
-        $this->withUnencryptedCookie(AdminAuthCookie::name(), $token)
+        $this->withToken($token)
             ->getJson('/api/admin/auth/me')
             ->assertOk()
             ->assertJsonPath('data.email', 'admin@limosudcars.local')

@@ -2,8 +2,6 @@
 
 namespace Tests\Concerns;
 
-use App\Support\AdminAuthCookie;
-
 trait AuthenticatesAdmin
 {
     protected function adminLoginCredentials(): array
@@ -20,13 +18,11 @@ trait AuthenticatesAdmin
 
         $response->assertOk();
 
-        return (string) $response->getCookie(AdminAuthCookie::name(), false)->getValue();
+        return (string) $response->json('access_token');
     }
 
     protected function withAdminAuth(): static
     {
-        $token = $this->adminToken();
-
-        return $this->withUnencryptedCookie(AdminAuthCookie::name(), $token);
+        return $this->withToken($this->adminToken());
     }
 }
